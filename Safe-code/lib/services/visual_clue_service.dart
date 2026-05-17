@@ -41,9 +41,6 @@ class VisualClueService {
     if (text.contains('стер') || text.contains('потерт')) {
       return PanelMarkType.worn;
     }
-    if (text.contains('журнал') || text.contains('попыт')) {
-      return PanelMarkType.log;
-    }
     if (text.contains('пыль') || text.contains('налет')) {
       return PanelMarkType.dust;
     }
