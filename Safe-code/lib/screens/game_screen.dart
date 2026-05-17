@@ -282,32 +282,7 @@ class _GameScreenState extends State<GameScreen> {
               isOpen: _isOpen,
               status: _status,
             ),
-            const SizedBox(height: 14),
-            EvidenceDossierCard(
-              level: level,
-              visualMarks: visualMarks,
-              highlightImportantClue: _highlightImportantClue,
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                Chip(
-                  avatar: const Icon(Icons.pin_outlined, size: 18),
-                  label: Text('Попытки: $_attemptsLeft/${level.maxAttempts}'),
-                ),
-                Chip(
-                  avatar: const Icon(Icons.error_outline, size: 18),
-                  label: Text('Ошибки: $_mistakes'),
-                ),
-                Chip(
-                  avatar: const Icon(Icons.lightbulb_outline, size: 18),
-                  label: Text('Помощь: $_hintsUsed'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             KeypadWidget(
               onDigit: _addDigit,
               onDelete: _deleteDigit,
@@ -321,7 +296,14 @@ class _GameScreenState extends State<GameScreen> {
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
+            _TacticalStrip(
+              attemptsLeft: _attemptsLeft,
+              maxAttempts: level.maxAttempts,
+              mistakes: _mistakes,
+              hintsUsed: _hintsUsed,
+            ),
+            const SizedBox(height: 12),
             FilledButton.tonalIcon(
               onPressed: _showSoftHint,
               icon: const Icon(Icons.lightbulb_outline),
@@ -329,6 +311,12 @@ class _GameScreenState extends State<GameScreen> {
             ),
             const SizedBox(height: 10),
             ToolPanel(tools: level.availableTools, onUseTool: _useTool),
+            const SizedBox(height: 18),
+            EvidenceDossierCard(
+              level: level,
+              visualMarks: visualMarks,
+              highlightImportantClue: _highlightImportantClue,
+            ),
             const SizedBox(height: 18),
             Text(
               'Полное досье ниже',
@@ -349,6 +337,124 @@ class _GameScreenState extends State<GameScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TacticalStrip extends StatelessWidget {
+  const _TacticalStrip({
+    required this.attemptsLeft,
+    required this.maxAttempts,
+    required this.mistakes,
+    required this.hintsUsed,
+  });
+
+  final int attemptsLeft;
+  final int maxAttempts;
+  final int mistakes;
+  final int hintsUsed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final attemptRatio = maxAttempts == 0 ? 0.0 : attemptsLeft / maxAttempts;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Expanded(
+              child: _MetricBlock(
+                title: 'Попытки',
+                value: '$attemptsLeft/$maxAttempts',
+                icon: Icons.pin_outlined,
+                color: colorScheme.primary,
+                progress: attemptRatio,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _MetricBlock(
+                title: 'Ошибки',
+                value: '$mistakes',
+                icon: Icons.error_outline,
+                color: mistakes == 0 ? Colors.greenAccent : colorScheme.error,
+                progress: mistakes == 0
+                    ? 0.08
+                    : (mistakes / maxAttempts).clamp(0.0, 1.0),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _MetricBlock(
+                title: 'Помощь',
+                value: '$hintsUsed',
+                icon: Icons.lightbulb_outline,
+                color: Colors.amber,
+                progress: hintsUsed == 0
+                    ? 0.08
+                    : (hintsUsed / 3).clamp(0.0, 1.0),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricBlock extends StatelessWidget {
+  const _MetricBlock({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.progress,
+  });
+
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 5,
+            color: color,
+            backgroundColor: color.withValues(alpha: 0.15),
+          ),
+        ),
+      ],
     );
   }
 }
