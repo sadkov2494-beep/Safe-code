@@ -8,7 +8,9 @@ import '../services/code_validator.dart';
 import '../services/hint_service.dart';
 import '../services/level_service.dart';
 import '../services/progress_service.dart';
+import '../services/visual_clue_service.dart';
 import '../widgets/clue_card.dart';
+import '../widgets/evidence_dossier_card.dart';
 import '../widgets/keypad_widget.dart';
 import '../widgets/safe_widget.dart';
 import '../widgets/tool_panel.dart';
@@ -34,6 +36,7 @@ class _GameScreenState extends State<GameScreen> {
   final _validator = const CodeValidator();
   final _hintService = const HintService();
   final _adService = const AdService();
+  final _visualClueService = const VisualClueService();
 
   String _input = '';
   int _mistakes = 0;
@@ -257,6 +260,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final level = widget.level;
+    final visualMarks = _visualClueService.marksByDigit(level);
     return Scaffold(
       appBar: AppBar(
         title: Text('${level.id}. ${level.title}'),
@@ -277,6 +281,12 @@ class _GameScreenState extends State<GameScreen> {
               codeLength: level.codeLength,
               isOpen: _isOpen,
               status: _status,
+            ),
+            const SizedBox(height: 14),
+            EvidenceDossierCard(
+              level: level,
+              visualMarks: visualMarks,
+              highlightImportantClue: _highlightImportantClue,
             ),
             const SizedBox(height: 14),
             Wrap(
@@ -303,6 +313,13 @@ class _GameScreenState extends State<GameScreen> {
               onDelete: _deleteDigit,
               onSubmit: _attemptsLeft > 0 ? _submit : () {},
               canSubmit: _input.length == level.codeLength && _attemptsLeft > 0,
+              visualMarks: visualMarks,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Подсказка: отпечатки, тепло, царапины, пыль и потертости нанесены прямо на кнопки панели.',
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 18),
             FilledButton.tonalIcon(
@@ -314,8 +331,13 @@ class _GameScreenState extends State<GameScreen> {
             ToolPanel(tools: level.availableTools, onUseTool: _useTool),
             const SizedBox(height: 18),
             Text(
-              'Улики и ограничения',
+              'Полное досье ниже',
               style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Эти карточки продублированы в кнопке “Все улики” сверху, чтобы не пропустить важную информацию.',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 10),
             ...level.allClues.map(
