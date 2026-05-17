@@ -1,0 +1,95 @@
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/player_progress.dart';
+
+class ProgressService {
+  const ProgressService();
+
+  static const _levelsKey = 'safe_code.level_progress';
+  static const _dailyBonusKey = 'safe_code.last_daily_bonus';
+  static const _themeKey = 'safe_code.theme_mode';
+
+  Future<PlayerProgress> loadProgress() async {
+    final preferences = await SharedPreferences.getInstance();
+    final rawLevels = preferences.getString(_levelsKey);
+    final rawDailyBonus = preferences.getString(_dailyBonusKey);
+    final levels = <int, LevelProgress>{};
+
+    if (rawLevels != null && rawLevels.isNotEmpty) {
+      final decoded = jsonDecode(rawLevels) as List<dynamic>;
+      for (final item in decoded) {
+        final progress = LevelProgress.fromJson(
+          Map<String, Object?>.from(item as Map<dynamic, dynamic>),
+        );
+        levels[progress.levelId] = progress;
+      }
+    }
+
+    return PlayerProgress(
+      levels: levels,
+      lastDailyBonusDate: rawDailyBonus == null
+          ? null
+          : DateTime.tryParse(rawDailyBonus),
+    );
+  }
+
+  Future<void> saveLevelResult({
+    required int levelId,
+    required int stars,
+  }) async {
+    final progress = await loadProgress();
+    final current = progress.levels[levelId];
+    if (current != null && current.bestStars >= stars) {
+      return;
+    }
+
+    final updated = Map<int, LevelProgress>.from(progress.levels)
+      ..[levelId] = LevelProgress(
+        levelId: levelId,
+        bestStars: stars,
+        completedAt: DateTime.now(),
+      );
+
+    await _saveLevels(updated);
+  }
+
+  Future<bool> claimDailyBonus() async {
+    final preferences = await SharedPreferences.getInstance();
+    final today = _dateOnly(DateTime.now());
+    final rawDailyBonus = preferences.getString(_dailyBonusKey);
+    final lastClaim = rawDailyBonus == null
+        ? null
+        : DateTime.tryParse(rawDailyBonus);
+
+    if (lastClaim != null && _dateOnly(lastClaim) == today) {
+      return false;
+    }
+
+    await preferences.setString(_dailyBonusKey, today.toIso8601String());
+    return true;
+  }
+
+  Future<String> loadThemeMode() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getString(_themeKey) ?? 'dark';
+  }
+
+  Future<void> saveThemeMode(String mode) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(_themeKey, mode);
+  }
+
+  Future<void> _saveLevels(Map<int, LevelProgress> levels) async {
+    final preferences = await SharedPreferences.getInstance();
+    final encoded = jsonEncode(
+      levels.values.map((level) => level.toJson()).toList(),
+    );
+    await preferences.setString(_levelsKey, encoded);
+  }
+
+  DateTime _dateOnly(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
+  }
+}
