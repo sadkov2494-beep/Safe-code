@@ -36,6 +36,12 @@ flutter analyze
 
 ## Как собрать Android
 
+Если в Cloud Agent окружении еще нет Flutter или Android SDK, сначала выполните из корня репозитория:
+
+```bash
+bash scripts/setup-flutter-android.sh
+```
+
 ```bash
 cd Safe-code
 flutter build apk
