@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../models/panel_mark.dart';
 
-class KeypadWidget extends StatelessWidget {
+class KeypadWidget extends StatefulWidget {
   const KeypadWidget({
     super.key,
     required this.onDigit,
@@ -18,6 +18,29 @@ class KeypadWidget extends StatelessWidget {
   final VoidCallback onSubmit;
   final bool canSubmit;
   final Map<String, List<PanelMark>> visualMarks;
+
+  @override
+  State<KeypadWidget> createState() => _KeypadWidgetState();
+}
+
+class _KeypadWidgetState extends State<KeypadWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shineController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shineController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shineController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,39 +59,46 @@ class KeypadWidget extends StatelessWidget {
       '✓',
     ];
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: buttons.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.55,
-      ),
-      itemBuilder: (context, index) {
-        final label = buttons[index];
-        final isSubmit = label == '✓';
-        final isDelete = label == '⌫';
-        final enabled = !isSubmit || canSubmit;
-        final marks = visualMarks[label] ?? const <PanelMark>[];
-        return FilledButton.tonal(
-          onPressed: enabled
-              ? () {
-                  HapticFeedback.selectionClick();
-                  if (isDelete) {
-                    onDelete();
-                  } else if (isSubmit) {
-                    onSubmit();
-                  } else {
-                    onDigit(label);
-                  }
-                }
-              : null,
-          child: _MarkedKeyLabel(
-            label: label,
-            marks: isDelete || isSubmit ? const [] : marks,
+    return AnimatedBuilder(
+      animation: _shineController,
+      builder: (context, _) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: buttons.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.55,
           ),
+          itemBuilder: (context, index) {
+            final label = buttons[index];
+            final isSubmit = label == '✓';
+            final isDelete = label == '⌫';
+            final enabled = !isSubmit || widget.canSubmit;
+            final marks = widget.visualMarks[label] ?? const <PanelMark>[];
+            return FilledButton.tonal(
+              onPressed: enabled
+                  ? () {
+                      HapticFeedback.selectionClick();
+                      if (isDelete) {
+                        widget.onDelete();
+                      } else if (isSubmit) {
+                        widget.onSubmit();
+                      } else {
+                        widget.onDigit(label);
+                      }
+                    }
+                  : null,
+              child: _MarkedKeyLabel(
+                label: label,
+                marks: isDelete || isSubmit ? const [] : marks,
+                shineValue: (_shineController.value + index * 0.055) % 1,
+                shineEnabled: !isDelete && !isSubmit,
+              ),
+            );
+          },
         );
       },
     );
@@ -76,10 +106,17 @@ class KeypadWidget extends StatelessWidget {
 }
 
 class _MarkedKeyLabel extends StatelessWidget {
-  const _MarkedKeyLabel({required this.label, required this.marks});
+  const _MarkedKeyLabel({
+    required this.label,
+    required this.marks,
+    required this.shineValue,
+    required this.shineEnabled,
+  });
 
   final String label;
   final List<PanelMark> marks;
+  final double shineValue;
+  final bool shineEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -92,12 +129,58 @@ class _MarkedKeyLabel extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           for (final mark in marks) _PanelMarkOverlay(mark: mark),
+          if (shineEnabled)
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _KeyShinePainter(progress: shineValue),
+              ),
+            ),
           Text(label, style: textStyle),
           if (marks.isNotEmpty)
             Positioned(right: 2, top: 0, child: _MarkLegendDots(marks: marks)),
         ],
       ),
     );
+  }
+}
+
+class _KeyShinePainter extends CustomPainter {
+  const _KeyShinePainter({required this.progress});
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final sweep = (progress * (size.width + size.height * 1.4)) - size.height;
+    final path = Path()
+      ..moveTo(sweep - 18, size.height)
+      ..lineTo(sweep + 2, size.height)
+      ..lineTo(sweep + size.height * 0.72, 0)
+      ..lineTo(sweep + size.height * 0.72 - 20, 0)
+      ..close();
+    final paint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          Colors.transparent,
+          Colors.white.withValues(alpha: 0.22),
+          Colors.transparent,
+        ],
+      ).createShader(Offset.zero & size);
+    canvas.drawPath(path, paint);
+
+    final edgePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.06)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(14)),
+      edgePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _KeyShinePainter oldDelegate) {
+    return oldDelegate.progress != progress;
   }
 }
 
