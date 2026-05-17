@@ -10,7 +10,6 @@ import '../services/level_service.dart';
 import '../services/progress_service.dart';
 import '../services/visual_clue_service.dart';
 import '../widgets/clue_card.dart';
-import '../widgets/evidence_dossier_card.dart';
 import '../widgets/keypad_widget.dart';
 import '../widgets/safe_widget.dart';
 import '../widgets/tool_panel.dart';
@@ -192,6 +191,48 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+  void _showCluesSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.78,
+            minChildSize: 0.45,
+            maxChildSize: 0.94,
+            builder: (context, controller) {
+              return ListView(
+                controller: controller,
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                children: [
+                  Text(
+                    'Улики и ограничения',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Журналы и ограничения читаются здесь. На клавишах остаются только физические следы.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  ...widget.level.allClues.map(
+                    (clue) => ClueCard(
+                      clue: clue,
+                      highlighted: _highlightImportantClue && clue.isImportant,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _showPauseSheet() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -340,21 +381,11 @@ class _GameScreenState extends State<GameScreen> {
             ),
             const SizedBox(height: 10),
             ToolPanel(tools: level.availableTools, onUseTool: _useTool),
-            const SizedBox(height: 18),
-            EvidenceDossierCard(
-              level: level,
-              visualMarks: visualMarks,
-              highlightImportantClue: _highlightImportantClue,
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'Полное досье ниже',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Эти карточки продублированы в кнопке “Все улики” сверху, чтобы не пропустить важную информацию.',
-              style: Theme.of(context).textTheme.bodySmall,
+            const SizedBox(height: 14),
+            _ClueSectionHeader(
+              clueCount: level.allClues.length,
+              markedDigits: visualMarks.keys.toList(),
+              onOpenSheet: _showCluesSheet,
             ),
             const SizedBox(height: 10),
             ...level.allClues.map(
@@ -425,6 +456,68 @@ class _TacticalStrip extends StatelessWidget {
                     : (hintsUsed / 3).clamp(0.0, 1.0),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ClueSectionHeader extends StatelessWidget {
+  const _ClueSectionHeader({
+    required this.clueCount,
+    required this.markedDigits,
+    required this.onOpenSheet,
+  });
+
+  final int clueCount;
+  final List<String> markedDigits;
+  final VoidCallback onOpenSheet;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: colorScheme.primary.withValues(alpha: 0.14),
+              ),
+              child: Icon(
+                Icons.folder_open_outlined,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Улики и ограничения',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    markedDigits.isEmpty
+                        ? '$clueCount записей в деле'
+                        : '$clueCount записей • следы на кнопках ${markedDigits.join(', ')}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            TextButton(onPressed: onOpenSheet, child: const Text('Открыть')),
           ],
         ),
       ),
