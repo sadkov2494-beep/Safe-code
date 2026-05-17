@@ -158,17 +158,11 @@ class _GameScreenState extends State<GameScreen> {
         _highlightImportantClue = true;
       }
     });
-    showDialog<void>(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(result.title),
-        content: Text(result.message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Закрыть'),
-          ),
-        ],
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: _ToolScanSheet(tool: tool, result: result, level: widget.level),
       ),
     );
   }
@@ -522,6 +516,295 @@ class _ClueSectionHeader extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _ToolScanSheet extends StatelessWidget {
+  const _ToolScanSheet({
+    required this.tool,
+    required this.result,
+    required this.level,
+  });
+
+  final SafeTool tool;
+  final ToolResult result;
+  final Level level;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = _toolAccent(tool);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 22),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: accent.withValues(alpha: 0.16),
+                ),
+                child: Icon(_toolIcon(tool), color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  result.title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            height: 128,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                colors: [
+                  accent.withValues(alpha: 0.18),
+                  Theme.of(context).colorScheme.surfaceContainerHighest,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(color: accent.withValues(alpha: 0.28)),
+            ),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 900),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) {
+                return CustomPaint(
+                  painter: _ToolScanPainter(
+                    tool: tool,
+                    color: accent,
+                    progress: value,
+                    code: level.correctCode,
+                  ),
+                  child: const SizedBox.expand(),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 14),
+          Card(
+            color: accent.withValues(alpha: 0.1),
+            child: ListTile(
+              leading: Icon(Icons.output, color: accent),
+              title: const Text('Результат анализа'),
+              subtitle: Text(result.message),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Закрыть'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _toolAccent(SafeTool tool) {
+    return switch (tool) {
+      SafeTool.fingerprintScanner => const Color(0xFF67E8F9),
+      SafeTool.thermalViewer => const Color(0xFFFF8A3D),
+      SafeTool.decryptor => const Color(0xFFA7F3D0),
+      SafeTool.analyzer => const Color(0xFFA78BFA),
+      SafeTool.stethoscope => const Color(0xFFFFC857),
+    };
+  }
+
+  IconData _toolIcon(SafeTool tool) {
+    return switch (tool) {
+      SafeTool.fingerprintScanner => Icons.fingerprint,
+      SafeTool.thermalViewer => Icons.thermostat,
+      SafeTool.decryptor => Icons.key_off_outlined,
+      SafeTool.analyzer => Icons.analytics_outlined,
+      SafeTool.stethoscope => Icons.graphic_eq,
+    };
+  }
+}
+
+class _ToolScanPainter extends CustomPainter {
+  const _ToolScanPainter({
+    required this.tool,
+    required this.color,
+    required this.progress,
+    required this.code,
+  });
+
+  final SafeTool tool;
+  final Color color;
+  final double progress;
+  final String code;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gridPaint = Paint()
+      ..color = color.withValues(alpha: 0.12)
+      ..strokeWidth = 1;
+    for (var x = 0.0; x < size.width; x += 24) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for (var y = 0.0; y < size.height; y += 24) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    final scanPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          Colors.transparent,
+          color.withValues(alpha: 0.48),
+          Colors.transparent,
+        ],
+      ).createShader(Offset.zero & size);
+    final scanX = size.width * progress;
+    canvas.drawRect(Rect.fromLTWH(scanX - 22, 0, 44, size.height), scanPaint);
+
+    switch (tool) {
+      case SafeTool.fingerprintScanner:
+        _drawFingerprint(canvas, size);
+      case SafeTool.thermalViewer:
+        _drawThermal(canvas, size);
+      case SafeTool.decryptor:
+        _drawDecryptor(canvas, size);
+      case SafeTool.analyzer:
+      case SafeTool.stethoscope:
+        _drawAnalyzer(canvas, size);
+    }
+  }
+
+  void _drawFingerprint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.68)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final center = Offset(size.width * 0.5, size.height * 0.54);
+    for (var i = 0; i < 5; i++) {
+      canvas.drawArc(
+        Rect.fromCenter(
+          center: center,
+          width: 34.0 + i * 18,
+          height: 44.0 + i * 16,
+        ),
+        -2.5,
+        4.6,
+        false,
+        paint,
+      );
+    }
+    _drawDigitBadge(canvas, size, code[0]);
+  }
+
+  void _drawThermal(Canvas canvas, Size size) {
+    for (var i = 0; i < code.length; i++) {
+      final digit = code[i];
+      final center = Offset(
+        size.width * (0.18 + i * 0.18),
+        size.height * (0.35 + (i.isEven ? 0.18 : 0.02)),
+      );
+      final paint = Paint()
+        ..shader = RadialGradient(
+          colors: [
+            color.withValues(alpha: i == code.length - 1 ? 0.72 : 0.28),
+            Colors.transparent,
+          ],
+        ).createShader(Rect.fromCircle(center: center, radius: 36));
+      canvas.drawCircle(center, 36, paint);
+      _drawSmallText(canvas, center, digit);
+    }
+  }
+
+  void _drawDecryptor(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.62)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    for (var i = 0; i < 10; i++) {
+      final x = 18 + i * ((size.width - 36) / 9);
+      final top = size.height * 0.25;
+      final bottom = size.height * 0.75;
+      canvas.drawLine(Offset(x, top), Offset(x, bottom), paint);
+      if (!code.contains('$i')) {
+        final cross = Paint()
+          ..color = Colors.redAccent.withValues(alpha: 0.75)
+          ..strokeWidth = 2;
+        canvas.drawLine(Offset(x - 6, top + 8), Offset(x + 6, top + 20), cross);
+        canvas.drawLine(Offset(x + 6, top + 8), Offset(x - 6, top + 20), cross);
+      }
+    }
+  }
+
+  void _drawAnalyzer(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: 0.68)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    final points = [
+      Offset(size.width * 0.12, size.height * 0.72),
+      Offset(size.width * 0.3, size.height * 0.42),
+      Offset(size.width * 0.48, size.height * 0.62),
+      Offset(size.width * 0.68, size.height * 0.28),
+      Offset(size.width * 0.88, size.height * 0.46),
+    ];
+    for (var i = 0; i < points.length - 1; i++) {
+      canvas.drawLine(points[i], points[i + 1], paint);
+    }
+    for (final point in points) {
+      canvas.drawCircle(point, 5, Paint()..color = color);
+    }
+  }
+
+  void _drawDigitBadge(Canvas canvas, Size size, String digit) {
+    final center = Offset(size.width * 0.82, size.height * 0.28);
+    canvas.drawCircle(
+      center,
+      22,
+      Paint()..color = color.withValues(alpha: 0.22),
+    );
+    _drawSmallText(canvas, center, digit, fontSize: 20);
+  }
+
+  void _drawSmallText(
+    Canvas canvas,
+    Offset center,
+    String text, {
+    double fontSize = 13,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    painter.paint(
+      canvas,
+      center - Offset(painter.width / 2, painter.height / 2),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ToolScanPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.tool != tool ||
+        oldDelegate.color != color ||
+        oldDelegate.code != code;
   }
 }
 
