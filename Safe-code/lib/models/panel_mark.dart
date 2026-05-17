@@ -1,4 +1,4 @@
-enum PanelMarkType { fingerprint, heat, scratch, worn, note, log, dust }
+enum PanelMarkType { fingerprint, heat, scratch, worn, dust }
 
 class PanelMark {
   const PanelMark({

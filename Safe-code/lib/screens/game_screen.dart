@@ -317,7 +317,7 @@ class _GameScreenState extends State<GameScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Подсказка: отпечатки, тепло, царапины, пыль и потертости нанесены прямо на кнопки панели.',
+              'На клавишах показаны только физические следы: отпечатки, тепло, царапины, пыль и потертости. Журнальные записи остаются в досье.',
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),

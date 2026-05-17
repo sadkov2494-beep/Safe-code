@@ -47,6 +47,35 @@ class SafeWidget extends StatelessWidget {
       child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(codeLength, (index) {
+              final hasDigit = index < input.length;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                margin: const EdgeInsets.symmetric(horizontal: 5),
+                width: 42,
+                height: 54,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: hasDigit ? statusColor : colorScheme.outlineVariant,
+                    width: 2,
+                  ),
+                  color: colorScheme.surface.withValues(alpha: 0.62),
+                ),
+                child: Text(
+                  hasDigit ? input[index] : '•',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    letterSpacing: 1.5,
+                    color: hasDigit ? statusColor : colorScheme.outline,
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 18),
+          Row(
             children: [
               AnimatedRotation(
                 turns: isOpen ? 0.08 : 0,
@@ -76,42 +105,13 @@ class SafeWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Следы, журналы и ограничения указывают на единственный код.',
+                      'Физические следы, сервисные логи и ограничения указывают на единственный код.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(codeLength, (index) {
-              final hasDigit = index < input.length;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                margin: const EdgeInsets.symmetric(horizontal: 5),
-                width: 42,
-                height: 54,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: hasDigit ? statusColor : colorScheme.outlineVariant,
-                    width: 2,
-                  ),
-                  color: colorScheme.surface.withValues(alpha: 0.62),
-                ),
-                child: Text(
-                  hasDigit ? input[index] : '•',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    letterSpacing: 1.5,
-                    color: hasDigit ? statusColor : colorScheme.outline,
-                  ),
-                ),
-              );
-            }),
           ),
         ],
       ),

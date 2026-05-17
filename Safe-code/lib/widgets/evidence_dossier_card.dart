@@ -48,6 +48,8 @@ class EvidenceDossierCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
+            const _LegendBox(),
+            const SizedBox(height: 10),
             _InlineClue(clue: important),
             const SizedBox(height: 8),
             _InlineClue(clue: visual),
@@ -66,14 +68,14 @@ class EvidenceDossierCard extends StatelessWidget {
                 ),
                 _InfoChip(
                   icon: Icons.touch_app_outlined,
-                  text: 'следы прямо на клавишах',
+                  text: 'физические следы на клавишах',
                 ),
               ],
             ),
             if (visualMarks.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
-                'Помеченные кнопки: ${visualMarks.keys.join(', ')}',
+                'Кнопки с физическими следами: ${visualMarks.keys.join(', ')}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -106,9 +108,11 @@ class EvidenceDossierCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Все записи, ограничения и визуальные следы собраны здесь. Следы также нанесены на цифровую панель.',
+                    'Сервисные логи и ограничения собраны в досье. На цифровой панели помечаются только физические следы: отпечатки, тепло, царапины, потертости и пыль.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
+                  const SizedBox(height: 12),
+                  const _LegendBox(),
                   const SizedBox(height: 16),
                   ...level.allClues.map(
                     (clue) => ClueCard(
@@ -122,6 +126,35 @@ class EvidenceDossierCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _LegendBox extends StatelessWidget {
+  const _LegendBox();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.memory_outlined, color: colorScheme.primary, size: 20),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'Легенда: вы аналитик службы восстановления сейфов Safe Code. Журнальные записи сняты из сервисной памяти панели: контроллер хранит обезличенные старые попытки и сообщает только совпадения, без раскрытия кода.',
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

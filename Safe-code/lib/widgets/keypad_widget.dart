@@ -134,24 +134,6 @@ class _PanelMarkOverlay extends StatelessWidget {
       PanelMarkType.worn => const Positioned.fill(
         child: CustomPaint(painter: _WornPainter()),
       ),
-      PanelMarkType.note => const Positioned(
-        right: 4,
-        bottom: 2,
-        child: Icon(
-          Icons.sticky_note_2_outlined,
-          size: 18,
-          color: Color(0xCCFFE082),
-        ),
-      ),
-      PanelMarkType.log => const Positioned(
-        right: 4,
-        bottom: 2,
-        child: Icon(
-          Icons.history_edu_outlined,
-          size: 18,
-          color: Color(0xCCB0BEC5),
-        ),
-      ),
       PanelMarkType.dust => const Positioned.fill(
         child: CustomPaint(painter: _DustPainter()),
       ),
@@ -174,8 +156,6 @@ class _MarkLegendDots extends StatelessWidget {
           PanelMarkType.heat => const Color(0xFFFFA726),
           PanelMarkType.scratch => const Color(0xFFCFD8DC),
           PanelMarkType.worn => const Color(0xFFFFF59D),
-          PanelMarkType.note => const Color(0xFFFFE082),
-          PanelMarkType.log => const Color(0xFFB0BEC5),
           PanelMarkType.dust => const Color(0xFFD7CCC8),
         };
         return Container(

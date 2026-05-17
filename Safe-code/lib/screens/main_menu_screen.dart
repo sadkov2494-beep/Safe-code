@@ -54,7 +54,7 @@ class MainMenuScreen extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             Text(
-              'Логические сейфы, журналы попыток, визуальные следы и аккуратный анализ вместо случайного подбора.',
+              'Вы аналитик службы восстановления Safe Code: изучайте сервисные журналы панели, физические следы на кнопках и ограничения вместо случайного подбора.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),

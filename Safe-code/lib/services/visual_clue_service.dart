@@ -9,7 +9,10 @@ class VisualClueService {
     final marks = <String, List<PanelMark>>{};
 
     for (final clue in level.visualClues) {
-      final type = _typeFor(clue);
+      final type = _physicalTypeFor(clue);
+      if (type == null) {
+        continue;
+      }
       final digits = _digitsFor(clue, level, type);
 
       for (final digit in digits) {
@@ -24,7 +27,7 @@ class VisualClueService {
     return marks;
   }
 
-  PanelMarkType _typeFor(Clue clue) {
+  PanelMarkType? _physicalTypeFor(Clue clue) {
     final text = '${clue.title} ${clue.description}'.toLowerCase();
     if (text.contains('отпечат')) {
       return PanelMarkType.fingerprint;
@@ -44,7 +47,7 @@ class VisualClueService {
     if (text.contains('пыль') || text.contains('налет')) {
       return PanelMarkType.dust;
     }
-    return PanelMarkType.note;
+    return null;
   }
 
   Set<String> _digitsFor(Clue clue, Level level, PanelMarkType type) {
@@ -63,9 +66,7 @@ class VisualClueService {
       PanelMarkType.heat => {code[code.length - 1]},
       PanelMarkType.scratch => {code[code.length ~/ 2]},
       PanelMarkType.worn => code.split('').take(2).toSet(),
-      PanelMarkType.log => {code[code.length - 1]},
       PanelMarkType.dust => {code.contains('0') ? '0' : code[0]},
-      PanelMarkType.note => code.split('').toSet(),
     };
   }
 }
