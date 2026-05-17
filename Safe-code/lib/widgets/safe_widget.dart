@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../models/level.dart';
+
 class SafeWidget extends StatelessWidget {
   const SafeWidget({
     super.key,
@@ -7,18 +9,21 @@ class SafeWidget extends StatelessWidget {
     required this.codeLength,
     required this.isOpen,
     required this.status,
+    required this.difficulty,
   });
 
   final String input;
   final int codeLength;
   final bool isOpen;
   final InputStatus status;
+  final LevelDifficulty difficulty;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final difficultyStyle = _difficultyStyle(difficulty);
     final statusColor = switch (status) {
-      InputStatus.idle => colorScheme.primary,
+      InputStatus.idle => difficultyStyle.accent,
       InputStatus.correct => Colors.greenAccent,
       InputStatus.wrong => colorScheme.error,
     };
@@ -31,7 +36,7 @@ class SafeWidget extends StatelessWidget {
         gradient: LinearGradient(
           colors: isOpen
               ? [Colors.green.shade900, colorScheme.surfaceContainerHighest]
-              : [const Color(0xFF111A27), colorScheme.surface],
+              : [difficultyStyle.start, difficultyStyle.end],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -62,7 +67,7 @@ class SafeWidget extends StatelessWidget {
                       Icon(Icons.sensors, size: 18, color: statusColor),
                       const SizedBox(width: 8),
                       Text(
-                        'CODE BUFFER',
+                        difficultyStyle.model,
                         style: Theme.of(context).textTheme.labelMedium
                             ?.copyWith(
                               letterSpacing: 1.6,
@@ -72,7 +77,7 @@ class SafeWidget extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        isOpen ? 'UNLOCKED' : 'LOCKED',
+                        isOpen ? 'UNLOCKED' : difficultyStyle.riskLabel,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           letterSpacing: 1.2,
                           color: statusColor,
@@ -182,6 +187,48 @@ class SafeWidget extends StatelessWidget {
 }
 
 enum InputStatus { idle, correct, wrong }
+
+class _SafeDifficultyStyle {
+  const _SafeDifficultyStyle({
+    required this.accent,
+    required this.start,
+    required this.end,
+    required this.model,
+    required this.riskLabel,
+  });
+
+  final Color accent;
+  final Color start;
+  final Color end;
+  final String model;
+  final String riskLabel;
+}
+
+_SafeDifficultyStyle _difficultyStyle(LevelDifficulty difficulty) {
+  return switch (difficulty) {
+    LevelDifficulty.easy => const _SafeDifficultyStyle(
+      accent: Color(0xFF67E8F9),
+      start: Color(0xFF0F2638),
+      end: Color(0xFF0B1018),
+      model: 'ARCHIVE SAFE',
+      riskLabel: 'LOCKED',
+    ),
+    LevelDifficulty.medium => const _SafeDifficultyStyle(
+      accent: Color(0xFFFFC857),
+      start: Color(0xFF302615),
+      end: Color(0xFF111827),
+      model: 'VAULT PANEL',
+      riskLabel: 'SECURED',
+    ),
+    LevelDifficulty.hard => const _SafeDifficultyStyle(
+      accent: Color(0xFFA78BFA),
+      start: Color(0xFF211532),
+      end: Color(0xFF11111B),
+      model: 'OMEGA LOCK',
+      riskLabel: 'HARD LOCK',
+    ),
+  };
+}
 
 class _DiagnosticGraph extends StatelessWidget {
   const _DiagnosticGraph({

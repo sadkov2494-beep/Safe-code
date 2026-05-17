@@ -50,6 +50,7 @@ class _GameScreenState extends State<GameScreen> {
     if (_input.length >= widget.level.codeLength || _isOpen) {
       return;
     }
+    SystemSound.play(SystemSoundType.click);
     setState(() {
       _input += digit;
       _status = InputStatus.idle;
@@ -60,6 +61,7 @@ class _GameScreenState extends State<GameScreen> {
     if (_input.isEmpty || _isOpen) {
       return;
     }
+    SystemSound.play(SystemSoundType.click);
     setState(() {
       _input = _input.substring(0, _input.length - 1);
       _status = InputStatus.idle;
@@ -73,6 +75,7 @@ class _GameScreenState extends State<GameScreen> {
 
     if (_validator.isCorrect(widget.level, _input)) {
       await HapticFeedback.heavyImpact();
+      await SystemSound.play(SystemSoundType.click);
       final stars = _validator.calculateStars(
         mistakes: _mistakes,
         hintsUsed: _hintsUsed,
@@ -104,6 +107,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     await HapticFeedback.vibrate();
+    await SystemSound.play(SystemSoundType.alert);
     setState(() {
       _mistakes++;
       _attemptsLeft--;
@@ -125,6 +129,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _showSoftHint() {
+    SystemSound.play(SystemSoundType.click);
     setState(() => _hintsUsed++);
     showDialog<void>(
       context: context,
@@ -142,6 +147,11 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _useTool(SafeTool tool) {
+    SystemSound.play(SystemSoundType.click);
+    if (tool == SafeTool.stethoscope) {
+      _showStethoscopeTool();
+      return;
+    }
     final result = _hintService.useTool(widget.level, tool);
     setState(() {
       _hintsUsed++;
@@ -161,6 +171,24 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showStethoscopeTool() {
+    setState(() => _hintsUsed++);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: _StethoscopeMiniGame(
+            targetDigit: int.parse(
+              widget.level.correctCode[widget.level.correctCode.length ~/ 2],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -281,6 +309,7 @@ class _GameScreenState extends State<GameScreen> {
               codeLength: level.codeLength,
               isOpen: _isOpen,
               status: _status,
+              difficulty: level.difficulty,
             ),
             const SizedBox(height: 10),
             KeypadWidget(
@@ -400,6 +429,217 @@ class _TacticalStrip extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _StethoscopeMiniGame extends StatefulWidget {
+  const _StethoscopeMiniGame({required this.targetDigit});
+
+  final int targetDigit;
+
+  @override
+  State<_StethoscopeMiniGame> createState() => _StethoscopeMiniGameState();
+}
+
+class _StethoscopeMiniGameState extends State<_StethoscopeMiniGame> {
+  double _dial = 4;
+  bool _locked = false;
+
+  double get _signal {
+    final distance = (_dial - widget.targetDigit).abs();
+    return (1 - distance / 9).clamp(0.0, 1.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final signal = _signal;
+    final signalColor = Color.lerp(
+      colorScheme.error,
+      Colors.greenAccent,
+      signal,
+    )!;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 22),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.graphic_eq, color: signalColor),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Прослушка замка',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              ),
+              Text(
+                '${(signal * 100).round()}%',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: signalColor,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Медленно ведите диск по цифрам. Чем выше амплитуда и ярче сигнал, тем ближе цифра к правильной механической отметке.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            height: 112,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              color: colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.55,
+              ),
+              border: Border.all(color: signalColor.withValues(alpha: 0.45)),
+            ),
+            child: CustomPaint(
+              painter: _StethoscopeSignalPainter(
+                dial: _dial,
+                targetDigit: widget.targetDigit,
+                color: signalColor,
+              ),
+              child: const SizedBox.expand(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(10, (digit) {
+              final selected = _dial.round() == digit;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                width: 26,
+                height: 26,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected
+                      ? signalColor.withValues(alpha: 0.24)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: selected ? signalColor : colorScheme.outlineVariant,
+                  ),
+                ),
+                child: Text('$digit'),
+              );
+            }),
+          ),
+          Slider(
+            value: _dial,
+            min: 0,
+            max: 9,
+            divisions: 9,
+            label: '${_dial.round()}',
+            onChanged: _locked
+                ? null
+                : (value) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _dial = value);
+                  },
+          ),
+          const SizedBox(height: 8),
+          if (_locked)
+            Card(
+              color: signalColor.withValues(alpha: 0.12),
+              child: ListTile(
+                leading: Icon(Icons.hearing, color: signalColor),
+                title: Text(
+                  'Сильнейший щелчок около цифры ${widget.targetDigit}',
+                ),
+                subtitle: const Text(
+                  'Эта цифра входит в код. Позиция примерная: ближе к центру комбинации.',
+                ),
+              ),
+            )
+          else
+            FilledButton.icon(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                SystemSound.play(SystemSoundType.click);
+                setState(() => _locked = true);
+              },
+              icon: const Icon(Icons.center_focus_strong),
+              label: const Text('Зафиксировать пик сигнала'),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StethoscopeSignalPainter extends CustomPainter {
+  const _StethoscopeSignalPainter({
+    required this.dial,
+    required this.targetDigit,
+    required this.color,
+  });
+
+  final double dial;
+  final int targetDigit;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gridPaint = Paint()
+      ..color = color.withValues(alpha: 0.12)
+      ..strokeWidth = 1;
+    for (var y = 0.0; y <= size.height; y += size.height / 4) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    final distance = (dial - targetDigit).abs();
+    final amplitude = (1 - distance / 9).clamp(0.0, 1.0);
+    final path = Path();
+    const points = 42;
+    for (var i = 0; i < points; i++) {
+      final x = i * size.width / (points - 1);
+      final wave = _wave(i, amplitude);
+      final y = size.height * 0.5 - wave * size.height * 0.34;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    final glowPaint = Paint()
+      ..color = color.withValues(alpha: 0.22 + amplitude * 0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(path, glowPaint);
+
+    final linePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(path, linePaint);
+  }
+
+  double _wave(int index, double amplitude) {
+    final pattern = [0.0, 0.35, -0.28, 0.62, -0.5, 0.22, -0.12];
+    final base = pattern[index % pattern.length];
+    final pulse = index % 5 == 0 ? 0.34 : 0.0;
+    return (base + pulse) * (0.2 + amplitude * 0.95);
+  }
+
+  @override
+  bool shouldRepaint(covariant _StethoscopeSignalPainter oldDelegate) {
+    return oldDelegate.dial != dial ||
+        oldDelegate.targetDigit != targetDigit ||
+        oldDelegate.color != color;
   }
 }
 
