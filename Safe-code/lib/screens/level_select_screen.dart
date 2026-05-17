@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/level.dart';
 import '../models/player_progress.dart';
 import '../services/level_service.dart';
+import '../services/level_visual_theme_service.dart';
 import '../services/progress_service.dart';
 import 'game_screen.dart';
 
@@ -26,6 +27,7 @@ class LevelSelectScreen extends StatefulWidget {
 
 class _LevelSelectScreenState extends State<LevelSelectScreen> {
   late PlayerProgress _progress = widget.progress;
+  final _visualThemeService = const LevelVisualThemeService();
 
   Future<void> _reloadProgress() async {
     final progress = await widget.progressService.loadProgress();
@@ -97,11 +99,16 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
                     _progress,
                   );
                   final stars = _progress.bestStarsFor(level.id);
+                  final visualTheme = _visualThemeService.themeForLevel(
+                    level.id,
+                  );
                   return _CaseFileTile(
                     level: level,
                     isUnlocked: unlocked,
                     stars: stars,
-                    accent: chapter.accent,
+                    accent: visualTheme.accent,
+                    safeStyleName: visualTheme.name,
+                    pattern: visualTheme.pattern.name,
                     onTap: unlocked ? () => _openLevel(level) : null,
                   );
                 }),
@@ -260,6 +267,8 @@ class _CaseFileTile extends StatelessWidget {
     required this.isUnlocked,
     required this.stars,
     required this.accent,
+    required this.safeStyleName,
+    required this.pattern,
     required this.onTap,
   });
 
@@ -267,6 +276,8 @@ class _CaseFileTile extends StatelessWidget {
   final bool isUnlocked;
   final int stars;
   final Color accent;
+  final String safeStyleName;
+  final String pattern;
   final VoidCallback? onTap;
 
   @override
@@ -321,7 +332,7 @@ class _CaseFileTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Код ${level.codeLength} цифр • ${level.maxAttempts} попыток',
+                      '$safeStyleName • $pattern • код ${level.codeLength} цифр',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],

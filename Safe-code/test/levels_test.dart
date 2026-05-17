@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:safe_code/models/clue.dart';
 import 'package:safe_code/data/levels.dart';
+import 'package:safe_code/services/level_visual_theme_service.dart';
 
 void main() {
   group('Level catalog', () {
@@ -54,6 +55,21 @@ void main() {
       }
 
       expect(failures, isEmpty, reason: failures.join('\n'));
+    });
+
+    test('each level has a unique visual theme', () {
+      const service = LevelVisualThemeService();
+      final themeNames = <String>{};
+      final modelCodes = <String>{};
+
+      for (final level in allLevels) {
+        final theme = service.themeForLevel(level.id);
+        themeNames.add(theme.name);
+        modelCodes.add(theme.modelCode);
+      }
+
+      expect(themeNames, hasLength(allLevels.length));
+      expect(modelCodes, hasLength(allLevels.length));
     });
   });
 }

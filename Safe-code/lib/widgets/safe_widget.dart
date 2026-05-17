@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/level.dart';
+import '../models/level_visual_theme.dart';
 
 class SafeWidget extends StatelessWidget {
   const SafeWidget({
@@ -9,21 +9,20 @@ class SafeWidget extends StatelessWidget {
     required this.codeLength,
     required this.isOpen,
     required this.status,
-    required this.difficulty,
+    required this.visualTheme,
   });
 
   final String input;
   final int codeLength;
   final bool isOpen;
   final InputStatus status;
-  final LevelDifficulty difficulty;
+  final LevelVisualTheme visualTheme;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final difficultyStyle = _difficultyStyle(difficulty);
     final statusColor = switch (status) {
-      InputStatus.idle => difficultyStyle.accent,
+      InputStatus.idle => visualTheme.accent,
       InputStatus.correct => Colors.greenAccent,
       InputStatus.wrong => colorScheme.error,
     };
@@ -36,7 +35,7 @@ class SafeWidget extends StatelessWidget {
         gradient: LinearGradient(
           colors: isOpen
               ? [Colors.green.shade900, colorScheme.surfaceContainerHighest]
-              : [difficultyStyle.start, difficultyStyle.end],
+              : [visualTheme.start, visualTheme.end],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -54,7 +53,11 @@ class SafeWidget extends StatelessWidget {
           children: [
             Positioned.fill(
               child: CustomPaint(
-                painter: _SafePanelPainter(color: statusColor),
+                painter: _SafePanelPainter(
+                  color: statusColor,
+                  pattern: visualTheme.pattern,
+                  levelId: visualTheme.levelId,
+                ),
               ),
             ),
             Padding(
@@ -67,7 +70,7 @@ class SafeWidget extends StatelessWidget {
                       Icon(Icons.sensors, size: 18, color: statusColor),
                       const SizedBox(width: 8),
                       Text(
-                        difficultyStyle.model,
+                        visualTheme.modelCode,
                         style: Theme.of(context).textTheme.labelMedium
                             ?.copyWith(
                               letterSpacing: 1.6,
@@ -77,7 +80,7 @@ class SafeWidget extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        isOpen ? 'UNLOCKED' : difficultyStyle.riskLabel,
+                        isOpen ? 'UNLOCKED' : visualTheme.lockLabel,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           letterSpacing: 1.2,
                           color: statusColor,
@@ -160,7 +163,7 @@ class SafeWidget extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isOpen ? 'Сейф открыт' : 'Диагностика панели',
+                              isOpen ? 'Сейф открыт' : visualTheme.name,
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w800),
                             ),
@@ -187,48 +190,6 @@ class SafeWidget extends StatelessWidget {
 }
 
 enum InputStatus { idle, correct, wrong }
-
-class _SafeDifficultyStyle {
-  const _SafeDifficultyStyle({
-    required this.accent,
-    required this.start,
-    required this.end,
-    required this.model,
-    required this.riskLabel,
-  });
-
-  final Color accent;
-  final Color start;
-  final Color end;
-  final String model;
-  final String riskLabel;
-}
-
-_SafeDifficultyStyle _difficultyStyle(LevelDifficulty difficulty) {
-  return switch (difficulty) {
-    LevelDifficulty.easy => const _SafeDifficultyStyle(
-      accent: Color(0xFF67E8F9),
-      start: Color(0xFF0F2638),
-      end: Color(0xFF0B1018),
-      model: 'ARCHIVE SAFE',
-      riskLabel: 'LOCKED',
-    ),
-    LevelDifficulty.medium => const _SafeDifficultyStyle(
-      accent: Color(0xFFFFC857),
-      start: Color(0xFF302615),
-      end: Color(0xFF111827),
-      model: 'VAULT PANEL',
-      riskLabel: 'SECURED',
-    ),
-    LevelDifficulty.hard => const _SafeDifficultyStyle(
-      accent: Color(0xFFA78BFA),
-      start: Color(0xFF211532),
-      end: Color(0xFF11111B),
-      model: 'OMEGA LOCK',
-      riskLabel: 'HARD LOCK',
-    ),
-  };
-}
 
 class _DiagnosticGraph extends StatelessWidget {
   const _DiagnosticGraph({
@@ -265,20 +226,73 @@ class _DiagnosticGraph extends StatelessWidget {
 }
 
 class _SafePanelPainter extends CustomPainter {
-  const _SafePanelPainter({required this.color});
+  const _SafePanelPainter({
+    required this.color,
+    required this.pattern,
+    required this.levelId,
+  });
 
   final Color color;
+  final SafePanelPattern pattern;
+  final int levelId;
 
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
       ..color = color.withValues(alpha: 0.07)
       ..strokeWidth = 1;
-    for (var x = 0.0; x < size.width; x += 22) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    }
-    for (var y = 0.0; y < size.height; y += 22) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+
+    switch (pattern) {
+      case SafePanelPattern.grid:
+        for (var x = 0.0; x < size.width; x += 22) {
+          canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+        }
+        for (var y = 0.0; y < size.height; y += 22) {
+          canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+        }
+      case SafePanelPattern.diagonal:
+        for (var x = -size.height; x < size.width; x += 24) {
+          canvas.drawLine(
+            Offset(x, size.height),
+            Offset(x + size.height, 0),
+            gridPaint,
+          );
+        }
+      case SafePanelPattern.circuit:
+        _drawCircuit(canvas, size, gridPaint);
+      case SafePanelPattern.rings:
+        final center = Offset(size.width * 0.74, size.height * 0.42);
+        for (var radius = 26.0; radius < size.width * 0.7; radius += 26) {
+          canvas.drawCircle(center, radius, gridPaint);
+        }
+      case SafePanelPattern.blueprint:
+        for (var x = 12.0; x < size.width; x += 34) {
+          canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+        }
+        for (var y = 12.0; y < size.height; y += 34) {
+          canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+        }
+        canvas.drawLine(
+          Offset.zero,
+          Offset(size.width, size.height),
+          gridPaint,
+        );
+        canvas.drawLine(
+          Offset(size.width, 0),
+          Offset(0, size.height),
+          gridPaint,
+        );
+      case SafePanelPattern.dotMatrix:
+        final dotPaint = Paint()..color = color.withValues(alpha: 0.09);
+        for (var x = 12.0; x < size.width; x += 22) {
+          for (var y = 12.0; y < size.height; y += 22) {
+            canvas.drawCircle(
+              Offset(x, y),
+              1.7 + (levelId % 3) * 0.35,
+              dotPaint,
+            );
+          }
+        }
     }
 
     final glowPaint = Paint()
@@ -298,9 +312,28 @@ class _SafePanelPainter extends CustomPainter {
     );
   }
 
+  void _drawCircuit(Canvas canvas, Size size, Paint paint) {
+    final offsets = [
+      Offset(size.width * 0.1, size.height * 0.24),
+      Offset(size.width * 0.36, size.height * 0.24),
+      Offset(size.width * 0.36, size.height * 0.48),
+      Offset(size.width * 0.62, size.height * 0.48),
+      Offset(size.width * 0.62, size.height * 0.72),
+      Offset(size.width * 0.88, size.height * 0.72),
+    ];
+    for (var i = 0; i < offsets.length - 1; i++) {
+      canvas.drawLine(offsets[i], offsets[i + 1], paint);
+    }
+    for (final point in offsets) {
+      canvas.drawCircle(point, 3, paint);
+    }
+  }
+
   @override
   bool shouldRepaint(covariant _SafePanelPainter oldDelegate) {
-    return oldDelegate.color != color;
+    return oldDelegate.color != color ||
+        oldDelegate.pattern != pattern ||
+        oldDelegate.levelId != levelId;
   }
 }
 

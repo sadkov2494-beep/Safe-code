@@ -7,6 +7,7 @@ import '../services/ad_service.dart';
 import '../services/code_validator.dart';
 import '../services/hint_service.dart';
 import '../services/level_service.dart';
+import '../services/level_visual_theme_service.dart';
 import '../services/progress_service.dart';
 import '../services/visual_clue_service.dart';
 import '../widgets/clue_card.dart';
@@ -36,6 +37,7 @@ class _GameScreenState extends State<GameScreen> {
   final _hintService = const HintService();
   final _adService = const AdService();
   final _visualClueService = const VisualClueService();
+  final _visualThemeService = const LevelVisualThemeService();
 
   String _input = '';
   int _mistakes = 0;
@@ -324,6 +326,7 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     final level = widget.level;
     final visualMarks = _visualClueService.marksByDigit(level);
+    final visualTheme = _visualThemeService.themeForLevel(level.id);
     return Scaffold(
       appBar: AppBar(
         title: Text('${level.id}. ${level.title}'),
@@ -344,7 +347,7 @@ class _GameScreenState extends State<GameScreen> {
               codeLength: level.codeLength,
               isOpen: _isOpen,
               status: _status,
-              difficulty: level.difficulty,
+              visualTheme: visualTheme,
             ),
             const SizedBox(height: 10),
             KeypadWidget(
