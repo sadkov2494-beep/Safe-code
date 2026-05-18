@@ -10,6 +10,9 @@ class ProgressService {
 
   static const _levelsKey = 'safe_code.level_progress';
   static const _dailyBonusKey = 'safe_code.last_daily_bonus';
+  static const _dailySafeKey = 'safe_code.last_daily_safe';
+  static const _dailyStreakKey = 'safe_code.daily_streak';
+  static const _bestDailyStreakKey = 'safe_code.best_daily_streak';
   static const _themeKey = 'safe_code.theme_mode';
   static const _onboardingKey = 'safe_code.onboarding_completed';
   static const _notebookPrefix = 'safe_code.notebook.';
@@ -18,6 +21,7 @@ class ProgressService {
     final preferences = await SharedPreferences.getInstance();
     final rawLevels = preferences.getString(_levelsKey);
     final rawDailyBonus = preferences.getString(_dailyBonusKey);
+    final rawDailySafe = preferences.getString(_dailySafeKey);
     final levels = <int, LevelProgress>{};
 
     if (rawLevels != null && rawLevels.isNotEmpty) {
@@ -35,6 +39,11 @@ class ProgressService {
       lastDailyBonusDate: rawDailyBonus == null
           ? null
           : DateTime.tryParse(rawDailyBonus),
+      lastDailySafeDate: rawDailySafe == null
+          ? null
+          : DateTime.tryParse(rawDailySafe),
+      dailyStreak: preferences.getInt(_dailyStreakKey) ?? 0,
+      bestDailyStreak: preferences.getInt(_bestDailyStreakKey) ?? 0,
     );
   }
 
@@ -42,6 +51,7 @@ class ProgressService {
     required int levelId,
     required int stars,
   }) async {
+    final preferences = await SharedPreferences.getInstance();
     final progress = await loadProgress();
     final current = progress.levels[levelId];
     if (current != null && current.bestStars >= stars) {
@@ -56,6 +66,10 @@ class ProgressService {
       );
 
     await _saveLevels(updated);
+
+    if (levelId >= PlayerProgress.dailySafeIdBase) {
+      await _saveDailyStreak(preferences, progress.lastDailySafeDate);
+    }
   }
 
   Future<bool> claimDailyBonus() async {
@@ -121,6 +135,34 @@ class ProgressService {
       levels.values.map((level) => level.toJson()).toList(),
     );
     await preferences.setString(_levelsKey, encoded);
+  }
+
+  Future<void> _saveDailyStreak(
+    SharedPreferences preferences,
+    DateTime? previousDailySafe,
+  ) async {
+    final today = _dateOnly(DateTime.now());
+    final previous = previousDailySafe == null
+        ? null
+        : _dateOnly(previousDailySafe);
+
+    var nextStreak = preferences.getInt(_dailyStreakKey) ?? 0;
+    if (previous == null) {
+      nextStreak = 1;
+    } else if (previous == today) {
+      return;
+    } else if (previous == today.subtract(const Duration(days: 1))) {
+      nextStreak++;
+    } else {
+      nextStreak = 1;
+    }
+
+    final bestStreak = preferences.getInt(_bestDailyStreakKey) ?? 0;
+    await preferences.setString(_dailySafeKey, today.toIso8601String());
+    await preferences.setInt(_dailyStreakKey, nextStreak);
+    if (nextStreak > bestStreak) {
+      await preferences.setInt(_bestDailyStreakKey, nextStreak);
+    }
   }
 
   DateTime _dateOnly(DateTime value) {

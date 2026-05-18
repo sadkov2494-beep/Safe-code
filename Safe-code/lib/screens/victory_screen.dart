@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/level.dart';
+import '../services/ad_service.dart';
 import '../services/level_service.dart';
 import '../services/progress_service.dart';
 import 'game_screen.dart';
@@ -22,6 +23,8 @@ class VictoryScreen extends StatelessWidget {
   final LevelService levelService;
   final ProgressService progressService;
   final bool wasSkipped;
+
+  static const _adService = AdService();
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +94,13 @@ class VictoryScreen extends StatelessWidget {
               FilledButton.icon(
                 icon: const Icon(Icons.navigate_next),
                 label: const Text('Следующий сейф'),
-                onPressed: () {
+                onPressed: () async {
+                  await _adService.showInterstitialAd(
+                    InterstitialAdPlacement.betweenLevels,
+                  );
+                  if (!context.mounted) {
+                    return;
+                  }
                   Navigator.of(context).pushReplacement<void, void>(
                     MaterialPageRoute(
                       builder: (_) => GameScreen(

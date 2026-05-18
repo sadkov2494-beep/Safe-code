@@ -19,6 +19,7 @@ class CollectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final completed = progress.levels.values.toList()
       ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    final achievements = _Achievement.unlocked(progress);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Коллекция сейфов')),
@@ -30,7 +31,10 @@ class CollectionScreen extends StatelessWidget {
                 _CollectionHeader(
                   count: completed.length,
                   stars: progress.totalStars,
+                  streak: progress.dailyStreak,
                 ),
+                const SizedBox(height: 14),
+                _AchievementShelf(achievements: achievements),
                 const SizedBox(height: 14),
                 ...completed.map((item) {
                   final level = levelService.levelForCollection(item.levelId);
@@ -43,10 +47,15 @@ class CollectionScreen extends StatelessWidget {
 }
 
 class _CollectionHeader extends StatelessWidget {
-  const _CollectionHeader({required this.count, required this.stars});
+  const _CollectionHeader({
+    required this.count,
+    required this.stars,
+    required this.streak,
+  });
 
   final int count;
   final int stars;
+  final int streak;
 
   @override
   Widget build(BuildContext context) {
@@ -81,11 +90,148 @@ class _CollectionHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$count экспонатов • $stars звезд',
+                  '$count экспонатов • $stars звезд • daily streak $streak',
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.76)),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Achievement {
+  const _Achievement({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.color,
+    required this.unlocked,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final Color color;
+  final bool unlocked;
+
+  static List<_Achievement> unlocked(PlayerProgress progress) {
+    return [
+      _Achievement(
+        icon: Icons.lock_open,
+        title: 'Первое вскрытие',
+        description: 'Открыть любой сейф',
+        color: const Color(0xFF67E8F9),
+        unlocked: progress.levels.isNotEmpty,
+      ),
+      _Achievement(
+        icon: Icons.star,
+        title: 'Чистая работа',
+        description: 'Набрать 10 звезд',
+        color: const Color(0xFFFFC857),
+        unlocked: progress.totalStars >= 10,
+      ),
+      _Achievement(
+        icon: Icons.today,
+        title: 'Ежедневный агент',
+        description: 'Открыть daily safe',
+        color: const Color(0xFF34D399),
+        unlocked: progress.openedDailySafes >= 1,
+      ),
+      _Achievement(
+        icon: Icons.local_fire_department,
+        title: 'Серия 3 дня',
+        description: 'Держать daily streak 3 дня',
+        color: const Color(0xFFFB923C),
+        unlocked: progress.bestDailyStreak >= 3,
+      ),
+      _Achievement(
+        icon: Icons.workspace_premium,
+        title: 'Коллекционер',
+        description: 'Открыть 10 сейфов',
+        color: const Color(0xFFA78BFA),
+        unlocked: progress.completedCount >= 10,
+      ),
+    ];
+  }
+}
+
+class _AchievementShelf extends StatelessWidget {
+  const _AchievementShelf({required this.achievements});
+
+  final List<_Achievement> achievements;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Достижения',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 118,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: achievements.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final achievement = achievements[index];
+              return _AchievementCard(achievement: achievement);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AchievementCard extends StatelessWidget {
+  const _AchievementCard({required this.achievement});
+
+  final _Achievement achievement;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = achievement.unlocked
+        ? achievement.color
+        : Theme.of(context).colorScheme.outline;
+    return Container(
+      width: 158,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: color.withValues(alpha: achievement.unlocked ? 0.14 : 0.08),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            achievement.unlocked ? achievement.icon : Icons.lock_outline,
+            color: color,
+          ),
+          const Spacer(),
+          Text(
+            achievement.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            achievement.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),

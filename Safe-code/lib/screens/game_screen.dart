@@ -399,6 +399,8 @@ class _GameScreenState extends State<GameScreen> {
                     );
                     if (ok && mounted) {
                       _showSoftHint();
+                    } else if (mounted) {
+                      _showAdUnavailableSnack();
                     }
                   },
                 ),
@@ -415,6 +417,8 @@ class _GameScreenState extends State<GameScreen> {
                     );
                     if (ok && mounted) {
                       setState(() => _attemptsLeft++);
+                    } else if (mounted) {
+                      _showAdUnavailableSnack();
                     }
                   },
                 ),
@@ -444,7 +448,11 @@ class _GameScreenState extends State<GameScreen> {
 
   Future<void> _skipLevel() async {
     final ok = await _adService.showRewardedAd(RewardedAdPlacement.skipLevel);
-    if (!ok || !mounted) {
+    if (!mounted) {
+      return;
+    }
+    if (!ok) {
+      _showAdUnavailableSnack();
       return;
     }
     await widget.progressService.saveLevelResult(
@@ -464,6 +472,14 @@ class _GameScreenState extends State<GameScreen> {
           progressService: widget.progressService,
           wasSkipped: true,
         ),
+      ),
+    );
+  }
+
+  void _showAdUnavailableSnack() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Реклама сейчас недоступна. Попробуйте еще раз позже.'),
       ),
     );
   }

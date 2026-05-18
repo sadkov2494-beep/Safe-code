@@ -35,7 +35,13 @@ class LevelProgress {
 }
 
 class PlayerProgress {
-  const PlayerProgress({required this.levels, this.lastDailyBonusDate});
+  const PlayerProgress({
+    required this.levels,
+    this.lastDailyBonusDate,
+    this.lastDailySafeDate,
+    this.dailyStreak = 0,
+    this.bestDailyStreak = 0,
+  });
 
   static const dailySafeIdBase = 80000000;
 
@@ -45,6 +51,9 @@ class PlayerProgress {
 
   final Map<int, LevelProgress> levels;
   final DateTime? lastDailyBonusDate;
+  final DateTime? lastDailySafeDate;
+  final int dailyStreak;
+  final int bestDailyStreak;
 
   int get completedCount {
     return levels.keys.where((levelId) => levelId < dailySafeIdBase).length;
@@ -58,13 +67,23 @@ class PlayerProgress {
     return levels.values.fold<int>(0, (sum, level) => sum + level.bestStars);
   }
 
+  int get openedDailySafes {
+    return levels.keys.where((levelId) => levelId >= dailySafeIdBase).length;
+  }
+
   PlayerProgress copyWith({
     Map<int, LevelProgress>? levels,
     DateTime? lastDailyBonusDate,
+    DateTime? lastDailySafeDate,
+    int? dailyStreak,
+    int? bestDailyStreak,
   }) {
     return PlayerProgress(
       levels: levels ?? this.levels,
       lastDailyBonusDate: lastDailyBonusDate ?? this.lastDailyBonusDate,
+      lastDailySafeDate: lastDailySafeDate ?? this.lastDailySafeDate,
+      dailyStreak: dailyStreak ?? this.dailyStreak,
+      bestDailyStreak: bestDailyStreak ?? this.bestDailyStreak,
     );
   }
 }

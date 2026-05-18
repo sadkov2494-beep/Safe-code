@@ -15,9 +15,10 @@ MVP мобильной 2D-логической игры на Flutter без Unit
 - Коллекция открытых сейфов с кодами, звездами и датой открытия.
 - Ежедневный уникальный сейф, детерминированный по текущей дате.
 - First-run onboarding на 1-2 минуты перед первым сейфом.
+- AdMob-интеграция с rewarded ads и interstitial-рекламой между уровнями на тестовых Google ID.
+- Daily streak, лучший daily streak и достижения в коллекции.
 - Бесплатные MVP-инструменты: сканер отпечатков, тепловизор, дешифратор, анализатор и прослушка.
 - Прогрессия: последовательное открытие уровней, переигрывание, лучший результат по звездам, общий прогресс и отдельный daily safe.
-- `AdService`-заглушка для будущих rewarded ads: дополнительная подсказка, дополнительная попытка и пропуск уровня.
 
 ## Как запустить
 
@@ -59,6 +60,12 @@ flutter build apk
 flutter build appbundle
 ```
 
+Перед публикацией замените тестовые AdMob ID, настройте release signing и проверьте:
+
+- `docs/ADMOB_SETUP.md`
+- `docs/STORE_RELEASE_CHECKLIST.md`
+- `docs/PRIVACY_POLICY_DRAFT.md`
+
 ## Как собрать iOS
 
 Сборка iOS требует macOS и Xcode:
@@ -86,14 +93,15 @@ flutter build ios
 4. Убедитесь, что код решается логически, а не перебором.
 5. Запустите `flutter test`, чтобы проверить уникальность id, длину кодов и наличие объяснений.
 
-## Где подключать рекламу в будущем
+## Где настроена реклама
 
-Точка расширения находится в `lib/services/ad_service.dart`.
+Рекламная интеграция находится в `lib/services/ad_service.dart`.
 
-Сейчас `AdService.showRewardedAd` сразу возвращает успешный результат. В будущем туда можно подключить реальный rewarded ads SDK и оставить игровые вызовы без изменения:
+Сейчас используются официальные тестовые Google AdMob ID. Перед публикацией замените native app ids и передайте реальные ad unit ids через `--dart-define`, как описано в `docs/ADMOB_SETUP.md`.
 
 - `RewardedAdPlacement.extraHint` — дополнительная подсказка;
 - `RewardedAdPlacement.extraAttempt` — дополнительная попытка;
 - `RewardedAdPlacement.skipLevel` — пропуск уровня.
+- `InterstitialAdPlacement.betweenLevels` — реклама между уровнями.
 
 Игровая интеграция находится в `lib/screens/game_screen.dart` в меню паузы.

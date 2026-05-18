@@ -91,6 +91,8 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                       total: widget.levelService.levels.length,
                       stars: widget.progress.totalStars,
                     ),
+                    const SizedBox(height: 12),
+                    _DailyStreakCard(progress: widget.progress),
                     const SizedBox(height: 16),
                     _PrimaryActionCard(
                       completed: widget.progress.completedCount,
@@ -134,7 +136,9 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                           child: _MenuActionTile(
                             icon: Icons.today_outlined,
                             title: 'Daily',
-                            subtitle: 'Уникальный сейф дня',
+                            subtitle: widget.progress.dailyStreak == 0
+                                ? 'Уникальный сейф дня'
+                                : 'Серия ${widget.progress.dailyStreak} дн.',
                             color: const Color(0xFF34D399),
                             onTap: _openDailySafe,
                           ),
@@ -470,6 +474,75 @@ class _PrimaryActionCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _DailyStreakCard extends StatelessWidget {
+  const _DailyStreakCard({required this.progress});
+
+  final PlayerProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final streak = progress.dailyStreak;
+    final best = progress.bestDailyStreak;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFF34D399).withValues(alpha: 0.16),
+              ),
+              child: const Icon(
+                Icons.local_fire_department,
+                color: Color(0xFF34D399),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    streak == 0
+                        ? 'Daily streak еще не начат'
+                        : 'Daily streak: $streak ${_dayWord(streak)}',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    best == 0
+                        ? 'Откройте ежедневный сейф, чтобы начать серию.'
+                        : 'Лучший рекорд: $best ${_dayWord(best)} • daily-сейфов: ${progress.openedDailySafes}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.68),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _dayWord(int value) {
+    if (value % 10 == 1 && value % 100 != 11) {
+      return 'день';
+    }
+    if ([2, 3, 4].contains(value % 10) && ![12, 13, 14].contains(value % 100)) {
+      return 'дня';
+    }
+    return 'дней';
   }
 }
 
