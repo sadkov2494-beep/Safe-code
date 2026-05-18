@@ -19,7 +19,7 @@ class CollectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final completed = progress.levels.values.toList()
       ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
-    final achievements = _Achievement.unlocked(progress);
+    final achievements = _Achievement.forProgress(progress);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Коллекция сейфов')),
@@ -117,7 +117,7 @@ class _Achievement {
   final Color color;
   final bool unlocked;
 
-  static List<_Achievement> unlocked(PlayerProgress progress) {
+  static List<_Achievement> forProgress(PlayerProgress progress) {
     return [
       _Achievement(
         icon: Icons.lock_open,
