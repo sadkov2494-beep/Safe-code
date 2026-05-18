@@ -32,10 +32,7 @@ class AudioService {
       return;
     }
     await _musicPlayer.setReleaseMode(ReleaseMode.loop);
-    await _musicPlayer.play(
-      AssetSource('audio/ambient_loop.wav'),
-      volume: 0.18,
-    );
+    await _musicPlayer.play(AssetSource('audio/music_loop.wav'), volume: 0.42);
     _musicIsPlaying = true;
   }
 

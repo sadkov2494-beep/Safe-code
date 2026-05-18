@@ -60,6 +60,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(_audioService.startAmbient());
     _loadNotebook();
   }
 

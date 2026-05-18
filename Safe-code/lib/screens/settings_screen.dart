@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
     required this.themeMode,
@@ -19,8 +19,16 @@ class SettingsScreen extends StatelessWidget {
   final Future<void> Function(bool enabled) onMusicChanged;
 
   @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  late bool _soundEnabled = widget.soundEnabled;
+  late bool _musicEnabled = widget.musicEnabled;
+
+  @override
   Widget build(BuildContext context) {
-    final isLight = themeMode == ThemeMode.light;
+    final isLight = widget.themeMode == ThemeMode.light;
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
       body: ListView(
@@ -34,8 +42,9 @@ class SettingsScreen extends StatelessWidget {
                 'Темная тема остается режимом по умолчанию.',
               ),
               value: isLight,
-              onChanged: (value) =>
-                  onThemeChanged(value ? ThemeMode.light : ThemeMode.dark),
+              onChanged: (value) => widget.onThemeChanged(
+                value ? ThemeMode.light : ThemeMode.dark,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -46,8 +55,11 @@ class SettingsScreen extends StatelessWidget {
               subtitle: const Text(
                 'Щелчки клавиш, ошибка, подсказка и открытие сейфа.',
               ),
-              value: soundEnabled,
-              onChanged: (value) => onSoundChanged(value),
+              value: _soundEnabled,
+              onChanged: (value) async {
+                setState(() => _soundEnabled = value);
+                await widget.onSoundChanged(value);
+              },
             ),
           ),
           Card(
@@ -57,8 +69,11 @@ class SettingsScreen extends StatelessWidget {
               subtitle: const Text(
                 'Тихий looping ambient для меню и игровых сцен.',
               ),
-              value: musicEnabled,
-              onChanged: (value) => onMusicChanged(value),
+              value: _musicEnabled,
+              onChanged: (value) async {
+                setState(() => _musicEnabled = value);
+                await widget.onMusicChanged(value);
+              },
             ),
           ),
           const Card(
