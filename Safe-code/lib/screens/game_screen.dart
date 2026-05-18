@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/level.dart';
+import '../models/notebook_entry.dart';
 import '../models/safe_tool.dart';
 import '../services/ad_service.dart';
 import '../services/code_validator.dart';
 import '../services/hint_service.dart';
 import '../services/level_service.dart';
+import '../services/safe_scene_service.dart';
 import '../services/level_visual_theme_service.dart';
 import '../services/progress_service.dart';
 import '../services/visual_clue_service.dart';
 import '../widgets/clue_card.dart';
 import '../widgets/keypad_widget.dart';
+import '../widgets/scene_backdrop.dart';
 import '../widgets/safe_widget.dart';
 import '../widgets/tool_panel.dart';
 import 'victory_screen.dart';
@@ -38,6 +41,8 @@ class _GameScreenState extends State<GameScreen> {
   final _adService = const AdService();
   final _visualClueService = const VisualClueService();
   final _visualThemeService = const LevelVisualThemeService();
+  final _sceneService = const SafeSceneService();
+  final _noteController = TextEditingController();
 
   String _input = '';
   int _mistakes = 0;
@@ -45,7 +50,31 @@ class _GameScreenState extends State<GameScreen> {
   late int _attemptsLeft = widget.level.maxAttempts;
   bool _isOpen = false;
   bool _highlightImportantClue = false;
+  NotebookEntry _notebook = NotebookEntry.empty();
   InputStatus _status = InputStatus.idle;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotebook();
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadNotebook() async {
+    final notebook = await widget.progressService.loadNotebook(widget.level.id);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _notebook = notebook;
+      _noteController.text = notebook.note;
+    });
+  }
 
   void _addDigit(String digit) {
     if (_input.length >= widget.level.codeLength || _isOpen) {
@@ -229,6 +258,123 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+  Future<void> _saveNotebook(NotebookEntry entry) async {
+    setState(() => _notebook = entry);
+    await widget.progressService.saveNotebook(widget.level.id, entry);
+  }
+
+  void _showNotebookSheet() {
+    var draft = _notebook;
+    _noteController.text = draft.note;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  18,
+                  0,
+                  18,
+                  18 + MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.edit_note_outlined),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Блокнот цифр',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Нажимайте на цифру, чтобы менять отметку: возможно, исключено, подтверждено.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: List.generate(10, (digit) {
+                        final mark =
+                            draft.digitMarks[digit] ?? DigitMark.unknown;
+                        return _DigitNoteChip(
+                          digit: digit,
+                          mark: mark,
+                          onTap: () {
+                            final updatedMarks = Map<int, DigitMark>.from(
+                              draft.digitMarks,
+                            );
+                            final nextMark = _nextDigitMark(mark);
+                            if (nextMark == DigitMark.unknown) {
+                              updatedMarks.remove(digit);
+                            } else {
+                              updatedMarks[digit] = nextMark;
+                            }
+                            final updated = draft.copyWith(
+                              digitMarks: updatedMarks,
+                            );
+                            setSheetState(() => draft = updated);
+                            _saveNotebook(updated);
+                          },
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: _noteController,
+                      minLines: 3,
+                      maxLines: 5,
+                      decoration: const InputDecoration(
+                        labelText: 'Заметки',
+                        hintText: 'Например: 4 точно первая, 9 исключить...',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        final updated = draft.copyWith(note: value);
+                        draft = updated;
+                        _saveNotebook(updated);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Закрыть'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  DigitMark _nextDigitMark(DigitMark mark) {
+    return switch (mark) {
+      DigitMark.unknown => DigitMark.candidate,
+      DigitMark.candidate => DigitMark.rejected,
+      DigitMark.rejected => DigitMark.confirmed,
+      DigitMark.confirmed => DigitMark.unknown,
+    };
+  }
+
   Future<void> _showPauseSheet() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -327,9 +473,11 @@ class _GameScreenState extends State<GameScreen> {
     final level = widget.level;
     final visualMarks = _visualClueService.marksByDigit(level);
     final visualTheme = _visualThemeService.themeForLevel(level.id);
+    final scene = _sceneService.sceneForLevel(level.id);
+    final isDaily = level.id >= LevelService.dailySafeIdBase;
     return Scaffold(
       appBar: AppBar(
-        title: Text('${level.id}. ${level.title}'),
+        title: Text(isDaily ? level.title : '${level.id}. ${level.title}'),
         actions: [
           IconButton(
             tooltip: 'Пауза и монетизация',
@@ -342,12 +490,16 @@ class _GameScreenState extends State<GameScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           children: [
-            SafeWidget(
-              input: _input,
-              codeLength: level.codeLength,
-              isOpen: _isOpen,
-              status: _status,
-              visualTheme: visualTheme,
+            SceneBackdrop(
+              scene: scene,
+              badge: isDaily ? 'DAILY' : null,
+              child: SafeWidget(
+                input: _input,
+                codeLength: level.codeLength,
+                isOpen: _isOpen,
+                status: _status,
+                visualTheme: visualTheme,
+              ),
             ),
             const SizedBox(height: 10),
             KeypadWidget(
@@ -370,6 +522,8 @@ class _GameScreenState extends State<GameScreen> {
               mistakes: _mistakes,
               hintsUsed: _hintsUsed,
             ),
+            const SizedBox(height: 12),
+            _NotebookSummary(notebook: _notebook, onOpen: _showNotebookSheet),
             const SizedBox(height: 12),
             FilledButton.tonalIcon(
               onPressed: _showSoftHint,
@@ -452,6 +606,133 @@ class _TacticalStrip extends StatelessWidget {
                     ? 0.08
                     : (hintsUsed / 3).clamp(0.0, 1.0),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NotebookSummary extends StatelessWidget {
+  const _NotebookSummary({required this.notebook, required this.onOpen});
+
+  final NotebookEntry notebook;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final confirmed = _digitsWithMark(DigitMark.confirmed);
+    final candidates = _digitsWithMark(DigitMark.candidate);
+    final rejected = _digitsWithMark(DigitMark.rejected);
+    final summary = [
+      if (confirmed.isNotEmpty) 'точно: ${confirmed.join(', ')}',
+      if (candidates.isNotEmpty) 'возможно: ${candidates.join(', ')}',
+      if (rejected.isNotEmpty) 'исключено: ${rejected.join(', ')}',
+    ].join(' • ');
+
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.edit_note_outlined),
+        title: const Text('Блокнот цифр'),
+        subtitle: Text(
+          summary.isEmpty
+              ? 'Отмечайте кандидатов, исключенные и подтвержденные цифры.'
+              : summary,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onOpen,
+      ),
+    );
+  }
+
+  List<int> _digitsWithMark(DigitMark mark) {
+    final digits =
+        notebook.digitMarks.entries
+            .where((entry) => entry.value == mark)
+            .map((entry) => entry.key)
+            .toList()
+          ..sort();
+    return digits;
+  }
+}
+
+class _DigitNoteChip extends StatelessWidget {
+  const _DigitNoteChip({
+    required this.digit,
+    required this.mark,
+    required this.onTap,
+  });
+
+  final int digit;
+  final DigitMark mark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (mark) {
+      DigitMark.unknown => Theme.of(context).colorScheme.outline,
+      DigitMark.candidate => Colors.amber,
+      DigitMark.rejected => Theme.of(context).colorScheme.error,
+      DigitMark.confirmed => Colors.greenAccent,
+    };
+    final icon = switch (mark) {
+      DigitMark.unknown => Icons.circle_outlined,
+      DigitMark.candidate => Icons.help_outline,
+      DigitMark.rejected => Icons.close,
+      DigitMark.confirmed => Icons.check,
+    };
+    final label = switch (mark) {
+      DigitMark.unknown => 'нет',
+      DigitMark.candidate => 'возможно',
+      DigitMark.rejected => 'исключить',
+      DigitMark.confirmed => 'точно',
+    };
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Ink(
+        width: 88,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: color.withValues(
+            alpha: mark == DigitMark.unknown ? 0.08 : 0.16,
+          ),
+          border: Border.all(color: color.withValues(alpha: 0.38)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$digit',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 13, color: color),
+                const SizedBox(width: 3),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

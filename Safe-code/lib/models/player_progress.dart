@@ -37,6 +37,8 @@ class LevelProgress {
 class PlayerProgress {
   const PlayerProgress({required this.levels, this.lastDailyBonusDate});
 
+  static const dailySafeIdBase = 80000000;
+
   factory PlayerProgress.empty() {
     return const PlayerProgress(levels: {});
   }
@@ -44,7 +46,9 @@ class PlayerProgress {
   final Map<int, LevelProgress> levels;
   final DateTime? lastDailyBonusDate;
 
-  int get completedCount => levels.length;
+  int get completedCount {
+    return levels.keys.where((levelId) => levelId < dailySafeIdBase).length;
+  }
 
   int bestStarsFor(int levelId) => levels[levelId]?.bestStars ?? 0;
 

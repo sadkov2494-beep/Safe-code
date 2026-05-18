@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/notebook_entry.dart';
 import '../models/player_progress.dart';
 
 class ProgressService {
@@ -10,6 +11,8 @@ class ProgressService {
   static const _levelsKey = 'safe_code.level_progress';
   static const _dailyBonusKey = 'safe_code.last_daily_bonus';
   static const _themeKey = 'safe_code.theme_mode';
+  static const _onboardingKey = 'safe_code.onboarding_completed';
+  static const _notebookPrefix = 'safe_code.notebook.';
 
   Future<PlayerProgress> loadProgress() async {
     final preferences = await SharedPreferences.getInstance();
@@ -79,6 +82,37 @@ class ProgressService {
   Future<void> saveThemeMode(String mode) async {
     final preferences = await SharedPreferences.getInstance();
     await preferences.setString(_themeKey, mode);
+  }
+
+  Future<bool> loadOnboardingCompleted() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool(_onboardingKey) ?? false;
+  }
+
+  Future<void> saveOnboardingCompleted() async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_onboardingKey, true);
+  }
+
+  Future<NotebookEntry> loadNotebook(int levelId) async {
+    final preferences = await SharedPreferences.getInstance();
+    final rawNotebook = preferences.getString('$_notebookPrefix$levelId');
+    if (rawNotebook == null || rawNotebook.isEmpty) {
+      return NotebookEntry.empty();
+    }
+    return NotebookEntry.fromJson(
+      Map<String, Object?>.from(
+        jsonDecode(rawNotebook) as Map<dynamic, dynamic>,
+      ),
+    );
+  }
+
+  Future<void> saveNotebook(int levelId, NotebookEntry entry) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      '$_notebookPrefix$levelId',
+      jsonEncode(entry.toJson()),
+    );
   }
 
   Future<void> _saveLevels(Map<int, LevelProgress> levels) async {

@@ -309,6 +309,21 @@ class LevelVisualThemeService {
   ];
 
   LevelVisualTheme themeForLevel(int levelId) {
-    return themes.firstWhere((theme) => theme.levelId == levelId);
+    final matchingTheme = themes.where((theme) => theme.levelId == levelId);
+    if (matchingTheme.isNotEmpty) {
+      return matchingTheme.first;
+    }
+
+    final base = themes[levelId.abs() % themes.length];
+    return LevelVisualTheme(
+      levelId: levelId,
+      name: 'Ежедневный ${base.name}',
+      modelCode: 'DAILY-${(levelId % 10000).abs().toString().padLeft(4, '0')}',
+      lockLabel: 'DAILY',
+      accent: base.accent,
+      start: base.start,
+      end: base.end,
+      pattern: base.pattern,
+    );
   }
 }

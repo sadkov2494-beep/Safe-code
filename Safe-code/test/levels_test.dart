@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:safe_code/models/clue.dart';
 import 'package:safe_code/data/levels.dart';
 import 'package:safe_code/services/level_visual_theme_service.dart';
+import 'package:safe_code/services/safe_scene_service.dart';
+import 'package:safe_code/services/level_service.dart';
 
 void main() {
   group('Level catalog', () {
@@ -70,6 +72,30 @@ void main() {
 
       expect(themeNames, hasLength(allLevels.length));
       expect(modelCodes, hasLength(allLevels.length));
+    });
+
+    test('all requested background scenes are assigned across levels', () {
+      const service = SafeSceneService();
+      final sceneTitles = allLevels
+          .map((level) => service.sceneForLevel(level.id).title)
+          .toSet();
+
+      expect(
+        sceneTitles,
+        containsAll(['Архив', 'Серверная', 'Склад', 'Лифт', 'Контейнер']),
+      );
+    });
+
+    test('daily safe is deterministic for the same date', () {
+      const service = LevelService();
+      final date = DateTime(2026, 5, 18);
+      final first = service.dailySafeFor(date);
+      final second = service.dailySafeFor(date);
+
+      expect(first.id, second.id);
+      expect(first.correctCode, second.correctCode);
+      expect(first.codeLength, 4);
+      expect(first.id, greaterThanOrEqualTo(LevelService.dailySafeIdBase));
     });
   });
 }

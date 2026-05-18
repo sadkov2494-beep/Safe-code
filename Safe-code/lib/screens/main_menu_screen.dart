@@ -6,7 +6,10 @@ import '../models/player_progress.dart';
 import '../services/level_service.dart';
 import '../services/progress_service.dart';
 import '../widgets/progress_badge.dart';
+import 'collection_screen.dart';
+import 'game_screen.dart';
 import 'level_select_screen.dart';
+import 'onboarding_screen.dart';
 import 'settings_screen.dart';
 import 'tutorial_screen.dart';
 
@@ -92,7 +95,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                     _PrimaryActionCard(
                       completed: widget.progress.completedCount,
                       total: widget.levelService.levels.length,
-                      onPlay: _openLevelSelect,
+                      onPlay: _startPlayFlow,
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -115,32 +118,47 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                         const SizedBox(width: 12),
                         Expanded(
                           child: _MenuActionTile(
-                            icon: Icons.card_giftcard,
-                            title: 'Бонус',
-                            subtitle: 'Ежедневная помощь',
+                            icon: Icons.collections_bookmark_outlined,
+                            title: 'Коллекция',
+                            subtitle: 'Открытые сейфы',
                             color: const Color(0xFFFFC857),
-                            onTap: _claimDailyBonus,
+                            onTap: _openCollection,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _MenuActionTile(
-                      icon: Icons.settings_outlined,
-                      title: 'Настройки',
-                      subtitle: 'Тема, вибрация и будущая монетизация',
-                      color: const Color(0xFFA78BFA),
-                      wide: true,
-                      onTap: () {
-                        Navigator.of(context).push<void>(
-                          MaterialPageRoute(
-                            builder: (_) => SettingsScreen(
-                              themeMode: widget.themeMode,
-                              onThemeChanged: widget.onThemeChanged,
-                            ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MenuActionTile(
+                            icon: Icons.today_outlined,
+                            title: 'Daily',
+                            subtitle: 'Уникальный сейф дня',
+                            color: const Color(0xFF34D399),
+                            onTap: _openDailySafe,
                           ),
-                        );
-                      },
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _MenuActionTile(
+                            icon: Icons.settings_outlined,
+                            title: 'Настройки',
+                            subtitle: 'Тема и звук',
+                            color: const Color(0xFFA78BFA),
+                            onTap: () {
+                              Navigator.of(context).push<void>(
+                                MaterialPageRoute(
+                                  builder: (_) => SettingsScreen(
+                                    themeMode: widget.themeMode,
+                                    onThemeChanged: widget.onThemeChanged,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 18),
                     Text(
@@ -160,6 +178,41 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     );
   }
 
+  Future<void> _startPlayFlow() async {
+    final onboardingCompleted = await widget.progressService
+        .loadOnboardingCompleted();
+    if (!mounted) {
+      return;
+    }
+
+    if (!onboardingCompleted && widget.progress.completedCount == 0) {
+      final completed = await Navigator.of(
+        context,
+      ).push<bool>(MaterialPageRoute(builder: (_) => const OnboardingScreen()));
+      if (completed != true || !mounted) {
+        return;
+      }
+      await widget.progressService.saveOnboardingCompleted();
+      await _openFirstLevel();
+      return;
+    }
+
+    await _openLevelSelect();
+  }
+
+  Future<void> _openFirstLevel() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => GameScreen(
+          level: widget.levelService.levels.first,
+          levelService: widget.levelService,
+          progressService: widget.progressService,
+        ),
+      ),
+    );
+    await widget.onProgressChanged();
+  }
+
   Future<void> _openLevelSelect() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
@@ -174,17 +227,26 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     await widget.onProgressChanged();
   }
 
-  Future<void> _claimDailyBonus() async {
-    final claimed = await widget.progressService.claimDailyBonus();
-    if (!mounted) {
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          claimed
-              ? 'Бонус активирован: дополнительная подсказка доступна сегодня.'
-              : 'Бонус уже получен сегодня. Возвращайтесь завтра.',
+  Future<void> _openDailySafe() async {
+    final dailyLevel = widget.levelService.dailySafeFor(DateTime.now());
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => GameScreen(
+          level: dailyLevel,
+          levelService: widget.levelService,
+          progressService: widget.progressService,
+        ),
+      ),
+    );
+    await widget.onProgressChanged();
+  }
+
+  Future<void> _openCollection() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => CollectionScreen(
+          progress: widget.progress,
+          levelService: widget.levelService,
         ),
       ),
     );

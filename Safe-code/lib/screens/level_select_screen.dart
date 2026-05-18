@@ -45,6 +45,8 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
       _CaseChapter(
         title: 'Глава I: Архивные сейфы',
         subtitle: 'Обучающие дела с короткими кодами',
+        intro:
+            'Старые архивные сейфы учат базовому правилу: каждая запись журнала - это улика, а не подсказка для перебора.',
         difficulty: LevelDifficulty.easy,
         accent: const Color(0xFF67E8F9),
         icon: Icons.inventory_2_outlined,
@@ -52,6 +54,8 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
       _CaseChapter(
         title: 'Глава II: Сервисные панели',
         subtitle: 'Больше журналов и перекрестных ограничений',
+        intro:
+            'Панели из серверных и складских зон смешивают следы, контрольные суммы и позиционные ограничения.',
         difficulty: LevelDifficulty.medium,
         accent: const Color(0xFFFFC857),
         icon: Icons.dns_outlined,
@@ -59,6 +63,8 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
       _CaseChapter(
         title: 'Глава III: Омега-замки',
         subtitle: 'Сложные дела с плотной логикой',
+        intro:
+            'Финальные замки требуют вести записи: исключайте лишнее, фиксируйте подтвержденные цифры и проверяйте каждую гипотезу.',
         difficulty: LevelDifficulty.hard,
         accent: const Color(0xFFA78BFA),
         icon: Icons.security_outlined,
@@ -137,6 +143,7 @@ class _CaseChapter {
   const _CaseChapter({
     required this.title,
     required this.subtitle,
+    required this.intro,
     required this.difficulty,
     required this.accent,
     required this.icon,
@@ -144,6 +151,7 @@ class _CaseChapter {
 
   final String title;
   final String subtitle;
+  final String intro;
   final LevelDifficulty difficulty;
   final Color accent;
   final IconData icon;
@@ -227,36 +235,48 @@ class _ChapterHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: chapter.accent.withValues(alpha: 0.16),
-          ),
-          child: Icon(chapter.icon, color: chapter.accent),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                chapter.title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+    return Card(
+      color: chapter.accent.withValues(alpha: 0.09),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: chapter.accent.withValues(alpha: 0.16),
               ),
-              Text(
-                '${chapter.subtitle} • $completed/$total',
-                style: Theme.of(context).textTheme.bodySmall,
+              child: Icon(chapter.icon, color: chapter.accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    chapter.title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${chapter.subtitle} • $completed/$total',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: chapter.accent,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(chapter.intro),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
