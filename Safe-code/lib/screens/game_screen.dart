@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -5,6 +7,7 @@ import '../models/level.dart';
 import '../models/notebook_entry.dart';
 import '../models/safe_tool.dart';
 import '../services/ad_service.dart';
+import '../services/audio_service.dart';
 import '../services/code_validator.dart';
 import '../services/hint_service.dart';
 import '../services/level_service.dart';
@@ -39,6 +42,7 @@ class _GameScreenState extends State<GameScreen> {
   final _validator = const CodeValidator();
   final _hintService = const HintService();
   final _adService = const AdService();
+  final _audioService = const AudioService();
   final _visualClueService = const VisualClueService();
   final _visualThemeService = const LevelVisualThemeService();
   final _sceneService = const SafeSceneService();
@@ -80,7 +84,7 @@ class _GameScreenState extends State<GameScreen> {
     if (_input.length >= widget.level.codeLength || _isOpen) {
       return;
     }
-    SystemSound.play(SystemSoundType.click);
+    unawaited(_audioService.playKeyClick());
     setState(() {
       _input += digit;
       _status = InputStatus.idle;
@@ -91,7 +95,7 @@ class _GameScreenState extends State<GameScreen> {
     if (_input.isEmpty || _isOpen) {
       return;
     }
-    SystemSound.play(SystemSoundType.click);
+    unawaited(_audioService.playBackspace());
     setState(() {
       _input = _input.substring(0, _input.length - 1);
       _status = InputStatus.idle;
@@ -105,7 +109,7 @@ class _GameScreenState extends State<GameScreen> {
 
     if (_validator.isCorrect(widget.level, _input)) {
       await HapticFeedback.heavyImpact();
-      await SystemSound.play(SystemSoundType.click);
+      await _audioService.playUnlock();
       final stars = _validator.calculateStars(
         mistakes: _mistakes,
         hintsUsed: _hintsUsed,
@@ -137,7 +141,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     await HapticFeedback.vibrate();
-    await SystemSound.play(SystemSoundType.alert);
+    await _audioService.playError();
     setState(() {
       _mistakes++;
       _attemptsLeft--;
@@ -159,7 +163,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _showSoftHint() {
-    SystemSound.play(SystemSoundType.click);
+    unawaited(_audioService.playHint());
     setState(() => _hintsUsed++);
     showDialog<void>(
       context: context,
@@ -177,7 +181,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _useTool(SafeTool tool) {
-    SystemSound.play(SystemSoundType.click);
+    unawaited(_audioService.playHint());
     if (tool == SafeTool.stethoscope) {
       _showStethoscopeTool();
       return;
@@ -1242,7 +1246,7 @@ class _StethoscopeMiniGameState extends State<_StethoscopeMiniGame> {
             FilledButton.icon(
               onPressed: () {
                 HapticFeedback.mediumImpact();
-                SystemSound.play(SystemSoundType.click);
+                unawaited(const AudioService().playHint());
                 setState(() => _locked = true);
               },
               icon: const Icon(Icons.center_focus_strong),

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../models/player_progress.dart';
+import '../services/audio_service.dart';
 import '../services/level_service.dart';
 import '../services/progress_service.dart';
 import '../widgets/progress_badge.dart';
@@ -20,16 +21,24 @@ class MainMenuScreen extends StatefulWidget {
     required this.progressService,
     required this.progress,
     required this.themeMode,
+    required this.soundEnabled,
+    required this.musicEnabled,
     required this.onProgressChanged,
     required this.onThemeChanged,
+    required this.onSoundChanged,
+    required this.onMusicChanged,
   });
 
   final LevelService levelService;
   final ProgressService progressService;
   final PlayerProgress progress;
   final ThemeMode themeMode;
+  final bool soundEnabled;
+  final bool musicEnabled;
   final Future<void> Function() onProgressChanged;
   final ValueChanged<ThemeMode> onThemeChanged;
+  final Future<void> Function(bool enabled) onSoundChanged;
+  final Future<void> Function(bool enabled) onMusicChanged;
 
   @override
   State<MainMenuScreen> createState() => _MainMenuScreenState();
@@ -37,6 +46,7 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen>
     with SingleTickerProviderStateMixin {
+  final _audioService = const AudioService();
   late final AnimationController _pulseController;
 
   @override
@@ -46,11 +56,13 @@ class _MainMenuScreenState extends State<MainMenuScreen>
       vsync: this,
       duration: const Duration(seconds: 7),
     )..repeat();
+    _audioService.startAmbient();
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _audioService.stopAmbient();
     super.dispose();
   }
 
@@ -155,7 +167,19 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                                 MaterialPageRoute(
                                   builder: (_) => SettingsScreen(
                                     themeMode: widget.themeMode,
+                                    soundEnabled: widget.soundEnabled,
+                                    musicEnabled: widget.musicEnabled,
                                     onThemeChanged: widget.onThemeChanged,
+                                    onSoundChanged: (enabled) async {
+                                      await widget.onSoundChanged(enabled);
+                                      await _audioService
+                                          .refreshAmbientPreference();
+                                    },
+                                    onMusicChanged: (enabled) async {
+                                      await widget.onMusicChanged(enabled);
+                                      await _audioService
+                                          .refreshAmbientPreference();
+                                    },
                                   ),
                                 ),
                               );

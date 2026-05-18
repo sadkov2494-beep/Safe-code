@@ -4,11 +4,19 @@ class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     super.key,
     required this.themeMode,
+    required this.soundEnabled,
+    required this.musicEnabled,
     required this.onThemeChanged,
+    required this.onSoundChanged,
+    required this.onMusicChanged,
   });
 
   final ThemeMode themeMode;
+  final bool soundEnabled;
+  final bool musicEnabled;
   final ValueChanged<ThemeMode> onThemeChanged;
+  final Future<void> Function(bool enabled) onSoundChanged;
+  final Future<void> Function(bool enabled) onMusicChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +39,28 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          Card(
+            child: SwitchListTile(
+              secondary: const Icon(Icons.volume_up_outlined),
+              title: const Text('Звуковые эффекты'),
+              subtitle: const Text(
+                'Щелчки клавиш, ошибка, подсказка и открытие сейфа.',
+              ),
+              value: soundEnabled,
+              onChanged: (value) => onSoundChanged(value),
+            ),
+          ),
+          Card(
+            child: SwitchListTile(
+              secondary: const Icon(Icons.music_note_outlined),
+              title: const Text('Фоновая атмосфера'),
+              subtitle: const Text(
+                'Тихий looping ambient для меню и игровых сцен.',
+              ),
+              value: musicEnabled,
+              onChanged: (value) => onMusicChanged(value),
+            ),
+          ),
           const Card(
             child: ListTile(
               leading: Icon(Icons.vibration),
@@ -46,7 +76,7 @@ class SettingsScreen extends StatelessWidget {
               leading: Icon(Icons.ads_click_outlined),
               title: Text('Реклама'),
               subtitle: Text(
-                'SDK не подключен. Заглушка AdService подготовлена для rewarded ads.',
+                'AdMob SDK подключен: rewarded ads и interstitial используют тестовые Google ID до релиза.',
               ),
             ),
           ),

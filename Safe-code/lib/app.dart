@@ -18,6 +18,8 @@ class _SafeCodeAppState extends State<SafeCodeApp> {
 
   ThemeMode _themeMode = ThemeMode.dark;
   PlayerProgress _progress = PlayerProgress.empty();
+  bool _soundEnabled = true;
+  bool _musicEnabled = true;
   bool _isLoading = true;
 
   @override
@@ -29,12 +31,16 @@ class _SafeCodeAppState extends State<SafeCodeApp> {
   Future<void> _loadState() async {
     final progress = await _progressService.loadProgress();
     final themeMode = await _progressService.loadThemeMode();
+    final soundEnabled = await _progressService.loadSoundEnabled();
+    final musicEnabled = await _progressService.loadMusicEnabled();
     if (!mounted) {
       return;
     }
     setState(() {
       _progress = progress;
       _themeMode = themeMode == 'light' ? ThemeMode.light : ThemeMode.dark;
+      _soundEnabled = soundEnabled;
+      _musicEnabled = musicEnabled;
       _isLoading = false;
     });
   }
@@ -57,6 +63,22 @@ class _SafeCodeAppState extends State<SafeCodeApp> {
     setState(() => _themeMode = mode);
   }
 
+  Future<void> _setSoundEnabled(bool enabled) async {
+    await _progressService.saveSoundEnabled(enabled);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _soundEnabled = enabled);
+  }
+
+  Future<void> _setMusicEnabled(bool enabled) async {
+    await _progressService.saveMusicEnabled(enabled);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _musicEnabled = enabled);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -72,8 +94,12 @@ class _SafeCodeAppState extends State<SafeCodeApp> {
               progressService: _progressService,
               progress: _progress,
               themeMode: _themeMode,
+              soundEnabled: _soundEnabled,
+              musicEnabled: _musicEnabled,
               onProgressChanged: _refreshProgress,
               onThemeChanged: _setThemeMode,
+              onSoundChanged: _setSoundEnabled,
+              onMusicChanged: _setMusicEnabled,
             ),
     );
   }

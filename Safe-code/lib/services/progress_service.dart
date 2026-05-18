@@ -14,6 +14,8 @@ class ProgressService {
   static const _dailyStreakKey = 'safe_code.daily_streak';
   static const _bestDailyStreakKey = 'safe_code.best_daily_streak';
   static const _themeKey = 'safe_code.theme_mode';
+  static const _soundEnabledKey = 'safe_code.sound_enabled';
+  static const _musicEnabledKey = 'safe_code.music_enabled';
   static const _onboardingKey = 'safe_code.onboarding_completed';
   static const _notebookPrefix = 'safe_code.notebook.';
 
@@ -96,6 +98,26 @@ class ProgressService {
   Future<void> saveThemeMode(String mode) async {
     final preferences = await SharedPreferences.getInstance();
     await preferences.setString(_themeKey, mode);
+  }
+
+  Future<bool> loadSoundEnabled() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool(_soundEnabledKey) ?? true;
+  }
+
+  Future<void> saveSoundEnabled(bool enabled) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_soundEnabledKey, enabled);
+  }
+
+  Future<bool> loadMusicEnabled() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool(_musicEnabledKey) ?? true;
+  }
+
+  Future<void> saveMusicEnabled(bool enabled) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_musicEnabledKey, enabled);
   }
 
   Future<bool> loadOnboardingCompleted() async {
