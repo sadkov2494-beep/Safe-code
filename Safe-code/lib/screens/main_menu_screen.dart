@@ -480,7 +480,6 @@ class _MenuActionTile extends StatelessWidget {
     required this.subtitle,
     required this.color,
     required this.onTap,
-    this.wide = false,
   });
 
   final IconData icon;
@@ -488,7 +487,6 @@ class _MenuActionTile extends StatelessWidget {
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
-  final bool wide;
 
   @override
   Widget build(BuildContext context) {
@@ -497,7 +495,7 @@ class _MenuActionTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(22),
       onTap: onTap,
       child: Ink(
-        padding: EdgeInsets.all(wide ? 16 : 14),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
           color: color.withValues(alpha: 0.12),
@@ -514,7 +512,7 @@ class _MenuActionTile extends StatelessWidget {
               ),
               child: Icon(icon, color: color),
             ),
-            SizedBox(width: wide ? 14 : 10),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -530,7 +528,7 @@ class _MenuActionTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     subtitle,
-                    maxLines: wide ? 2 : 1,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.68),
