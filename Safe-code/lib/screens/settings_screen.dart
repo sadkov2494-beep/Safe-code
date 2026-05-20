@@ -91,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Icon(Icons.ads_click_outlined),
               title: Text('Реклама'),
               subtitle: Text(
-                'AdMob SDK подключен: rewarded ads и interstitial используют тестовые Google ID до релиза.',
+                'Yandex Ads SDK подключен: rewarded ads и interstitial используют тестовые demo ID до релиза.',
               ),
             ),
           ),

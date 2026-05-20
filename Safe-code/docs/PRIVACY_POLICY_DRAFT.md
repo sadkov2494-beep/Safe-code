@@ -19,14 +19,14 @@ This local data is not sent to our servers by the current app build.
 
 ## Advertising
 
-The app integrates Google Mobile Ads. Development builds use Google test ads. If
-production ads are enabled, Google may process data such as device identifiers,
-ad interactions, diagnostics, approximate location inferred by Google services
-and other advertising-related information according to Google's policies.
+The app integrates Yandex Mobile Ads. Development builds use Yandex demo ads. If
+production ads are enabled, Yandex may process data such as device identifiers,
+ad interactions, diagnostics, approximate location inferred by platform services
+and other advertising-related information according to Yandex policies.
 
-Google privacy information:
+Yandex privacy information:
 
-https://policies.google.com/privacy
+https://yandex.com/legal/confidential/
 
 ## Analytics
 

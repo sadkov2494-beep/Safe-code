@@ -69,7 +69,7 @@ Tags/categories:
 
 Google Play:
 
-- Contains ads: yes, once real AdMob ids are used.
+- Contains ads: yes, once real Yandex Ads ids are used.
 - Data Safety: ads SDK may collect device identifiers, diagnostics and approximate ad data.
 - Content rating: puzzle/logic, no violence.
 - Target audience: teens/adults unless you complete family-policy requirements.

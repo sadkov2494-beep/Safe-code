@@ -15,7 +15,7 @@ MVP мобильной 2D-логической игры на Flutter без Unit
 - Коллекция открытых сейфов с кодами, звездами и датой открытия.
 - Ежедневный уникальный сейф, детерминированный по текущей дате.
 - First-run onboarding на 1-2 минуты перед первым сейфом.
-- AdMob-интеграция с rewarded ads и interstitial-рекламой между уровнями на тестовых Google ID.
+- Yandex Ads-интеграция с rewarded ads и interstitial-рекламой между уровнями на тестовых Yandex demo ID.
 - Daily streak, лучший daily streak и достижения в коллекции.
 - Игровые WAV-звуки: щелчки клавиш, удаление, ошибка, подсказка и открытие сейфа.
 - Зацикленная фоновая мелодия для меню и игровых экранов; настройки отдельно отключают эффекты и музыку.
@@ -62,9 +62,10 @@ flutter build apk
 flutter build appbundle
 ```
 
-Перед публикацией замените тестовые AdMob ID, настройте release signing и проверьте:
+Перед публикацией замените тестовые Yandex Ads ID, настройте release signing и проверьте:
 
-- `docs/ADMOB_SETUP.md`
+- `docs/YANDEX_ADS_SETUP.md`
+- `docs/RUSTORE_RELEASE_CHECKLIST.md`
 - `docs/STORE_RELEASE_CHECKLIST.md`
 - `docs/PRIVACY_POLICY_DRAFT.md`
 
@@ -99,7 +100,7 @@ flutter build ios
 
 Рекламная интеграция находится в `lib/services/ad_service.dart`.
 
-Сейчас используются официальные тестовые Google AdMob ID. Перед публикацией замените native app ids и передайте реальные ad unit ids через `--dart-define`, как описано в `docs/ADMOB_SETUP.md`.
+Сейчас используются официальные тестовые Yandex demo ID. Перед публикацией передайте реальные ad unit ids через `--dart-define`, как описано в `docs/YANDEX_ADS_SETUP.md`.
 
 - `RewardedAdPlacement.extraHint` — дополнительная подсказка;
 - `RewardedAdPlacement.extraAttempt` — дополнительная попытка;
