@@ -5,6 +5,13 @@ PROJECT_DIR="${PROJECT_DIR:-Safe-code}"
 
 cd "$PROJECT_DIR"
 
+if [ -f local.env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source local.env
+  set +a
+fi
+
 flutter pub get
 
 flutter build apk --release \

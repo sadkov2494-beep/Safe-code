@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local Yandex ad unit ids (never commit production R-M ids)
+local.env

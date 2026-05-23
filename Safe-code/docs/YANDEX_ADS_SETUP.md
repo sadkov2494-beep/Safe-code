@@ -30,6 +30,25 @@ All gameplay calls are centralized in `lib/services/ad_service.dart`.
    - rewarded video for level skip;
    - interstitial for between-level pauses.
 
+## Easiest way: local.env file
+
+1. Copy the template:
+
+   ```bash
+   cd Safe-code
+   cp local.env.example local.env
+   ```
+
+2. Paste your four `R-M-...` ids into `local.env`.
+
+3. Build from repo root:
+
+   ```bash
+   bash scripts/build-rustore-release.sh
+   ```
+
+The file `local.env` is gitignored. You can also send ids to the Cloud Agent in chat and paste the generated file locally.
+
 ## Build with production ad unit ids
 
 Pass real Yandex ad unit ids at build time:
