@@ -40,6 +40,8 @@ https://github.com/sadkov2494-beep/Safe-code/raw/cursor/safe-code-flutter-mvp-37
 ## Windows: что установить
 
 1. **Flutter SDK** — https://docs.flutter.dev/get-started/install/windows  
+   Минимум: Dart **3.10.0** (у вас подойдёт `flutter pub get`, если `dart --version` ≥ 3.10).  
+   Рекомендуется: `flutter upgrade` до последнего stable.
 2. **Android Studio** (Android SDK + эмулятор) — https://developer.android.com/studio  
 3. Проверка: `flutter doctor`
 
