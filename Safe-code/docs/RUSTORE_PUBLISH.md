@@ -16,7 +16,7 @@
 - APK: https://github.com/sadkov2494-beep/Safe-code/raw/cursor/safe-code-flutter-mvp-3784/releases/safe-code-release.apk
 - AAB: https://github.com/sadkov2494-beep/Safe-code/raw/cursor/safe-code-flutter-mvp-3784/releases/safe-code-release.aab
 
-**SHA256 APK (сборка 1.2.0+4):** `e82e5923fc2814befb0d7e3735de2599e0a5872871a4520f1feae1f4c50498fe`
+**SHA256 APK (сборка 1.2.1+5, боевые Yandex ID):** `f8ee94f4335c118cdcbcffebd8e7e6efb58ae1d1e09d33cc6a0f1fac304de819`
 
 ## 2. Release-подпись (обязательно перед продакшеном)
 
@@ -79,8 +79,8 @@ bash scripts/build-rustore-release.sh
 1. В карточке приложения → **Версии** → **Загрузить версию**.
 2. Выберите **APK** (`safe-code-release.apk`) или **AAB**, если консоль требует bundle.
 3. Укажите:
-   - версия: **1.2.0**
-   - код версии (versionCode): **4**
+   - версия: **1.2.1**
+   - код версии (versionCode): **5**
 4. Добавьте **release notes** (что нового) — см. `store_assets/RUSTORE_LISTING.ru.md`.
 5. Отправьте на **модерацию**.
 

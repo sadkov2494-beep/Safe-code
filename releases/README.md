@@ -11,13 +11,14 @@
 
 ## Версия
 
-- **1.2.0** (versionCode **4**)
+- **1.2.1** (versionCode **5**)
 - Package: `com.safecode.safe_code`
+- Yandex Ads: production blocks `R-M-19316679-*` (вшиты в сборку)
 
 ## SHA256
 
-- APK: `e82e5923fc2814befb0d7e3735de2599e0a5872871a4520f1feae1f4c50498fe`
-- AAB: `425ce697a1be6e14daa6faa424346796f561082f0cef95b0a38049e58ff90318`
+- APK: `f8ee94f4335c118cdcbcffebd8e7e6efb58ae1d1e09d33cc6a0f1fac304de819`
+- AAB: `67e7b5457549de27e3de9c65a0b713088ca2bb942c6330be7efe692eee31d1ea`
 
 ## Скачать
 
@@ -43,4 +44,4 @@ bash scripts/build-rustore-release.sh
 
 ## Реклама
 
-По умолчанию — Yandex demo ID. Для продакшена задайте R-M ID через `Safe-code/local.env` (см. `docs/YANDEX_ADS_SETUP.md`).
+Сборка **1.2.1+5** собрана с боевыми блоками Яндекс РСЯ (rewarded + interstitial).
