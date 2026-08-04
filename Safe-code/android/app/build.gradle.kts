@@ -8,10 +8,14 @@ plugins {
 }
 
 val keystoreProperties = Properties()
-val keystorePropertiesFile = rootProject.file("key.properties")
-val hasReleaseKeystore = keystorePropertiesFile.exists()
+val keystorePropertiesFile = when {
+    rootProject.file("key.properties").exists() -> rootProject.file("key.properties")
+    rootProject.file("ci-key.properties").exists() -> rootProject.file("ci-key.properties")
+    else -> null
+}
+val hasReleaseKeystore = keystorePropertiesFile != null
 if (hasReleaseKeystore) {
-    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+    keystorePropertiesFile!!.inputStream().use { keystoreProperties.load(it) }
 }
 
 android {
@@ -29,10 +33,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.safecode.safe_code"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -44,7 +45,7 @@ android {
             create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
+                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["storePassword"] as String
             }
         }
@@ -52,8 +53,6 @@ android {
 
     buildTypes {
         release {
-            // Cloud test builds fall back to debug signing. Production RuStore
-            // builds should provide android/key.properties and a release keystore.
             signingConfig = signingConfigs.getByName(
                 if (hasReleaseKeystore) "release" else "debug"
             )

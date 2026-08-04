@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../config/app_release_config.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -25,15 +29,59 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late bool _soundEnabled = widget.soundEnabled;
   late bool _musicEnabled = widget.musicEnabled;
+  PackageInfo? _packageInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackageInfo();
+  }
+
+  Future<void> _loadPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _packageInfo = info);
+  }
+
+  Future<void> _openUpdatePage() async {
+    final uri = Uri.parse(AppReleaseConfig.releasesPageUrl);
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось открыть страницу обновлений.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isLight = widget.themeMode == ThemeMode.light;
+    final versionLabel = _packageInfo == null
+        ? 'Загрузка...'
+        : '${_packageInfo!.version} (${_packageInfo!.buildNumber})';
+
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.system_update_alt_outlined),
+              title: const Text('Версия приложения'),
+              subtitle: Text(
+                '$versionLabel\n'
+                'Начиная с 1.2.4 обновления устанавливаются поверх старой версии без удаления.',
+              ),
+              trailing: FilledButton.tonal(
+                onPressed: _openUpdatePage,
+                child: const Text('Обновить'),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           Card(
             child: SwitchListTile(
               secondary: const Icon(Icons.light_mode_outlined),

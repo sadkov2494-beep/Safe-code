@@ -11,29 +11,41 @@
 
 ## Версия
 
-- **1.2.3** (versionCode **7**)
+- **1.2.4** (versionCode **8**)
 - Package: `com.safecode.safe_code`
 - Yandex Ads: demo blocks (облачная сборка)
 
+## Подпись и обновления
+
+Начиная с **1.2.4+8** все APK из этого репозитория подписываются **одним CI-ключом**
+(`android/keystores/safe-code-ci-upload.jks`). Новые версии можно ставить **поверх старой**
+без удаления приложения.
+
+Если у вас установлена сборка **1.2.3 или ниже** с облачной debug-подписью — удалите её
+**один раз** и поставьте 1.2.4+. Дальше обновления будут накатываться автоматически.
+
+Подробнее: `Safe-code/docs/ANDROID_SIGNING.md`
+
 ## SHA256
 
-- APK: `01c4bfd5ecdf3430efffde3ecb7fe72243cf0ac0e27380163be379330b273e75`
+- APK: `fb98ef236dd628c28e366822fe90fcf4b548e6a807455f427cf8d01ca425df96`
+- Cert SHA-256: `0af0b2555c5f821470c8f21f66fcd675b1e6bff05b7bfbb36d0df868bab5745c`
 
 ## Скачать
 
-- APK: https://github.com/sadkov2494-beep/Safe-code/raw/cursor/diverse-level-logic-b62e/releases/safe-code-release.apk
+- APK: https://github.com/sadkov2494-beep/Safe-code/raw/cursor/consistent-android-signing-b62e/releases/safe-code-release.apk
 
 ## Установка APK вручную
 
 1. Скачайте APK на телефон.
 2. Разрешите установку из браузера или файлового менеджера.
-3. Откройте файл и установите.
+3. Откройте файл и установите (поверх старой версии 1.2.4+, если она уже есть).
 
 ## RuStore
 
 Пошаговая публикация: `Safe-code/docs/RUSTORE_PUBLISH.md`
 
-**Важно:** эта сборка подписана debug-ключом (облачная CI-сборка). Перед публичным релизом в RuStore создайте release keystore и пересоберите:
+Для RuStore с **собственным** release keystore:
 
 ```bash
 bash scripts/generate-rustore-keystore.sh
