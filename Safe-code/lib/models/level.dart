@@ -1,4 +1,5 @@
 import 'clue.dart';
+import 'puzzle_archetype.dart';
 import 'safe_tool.dart';
 
 enum LevelDifficulty { easy, medium, hard }
@@ -16,6 +17,9 @@ class Level {
     required this.availableTools,
     required this.softHint,
     required this.solutionExplanation,
+    required this.archetype,
+    this.isBoss = false,
+    this.difficultyRating = 0,
   });
 
   final int id;
@@ -29,6 +33,12 @@ class Level {
   final List<SafeTool> availableTools;
   final String softHint;
   final String solutionExplanation;
+  final PuzzleArchetype archetype;
+  final bool isBoss;
+  final int difficultyRating;
 
   List<Clue> get allClues => [...logicalClues, ...visualClues];
+
+  List<Clue> get reliableLogicalClues =>
+      logicalClues.where((clue) => clue.isReliable).toList();
 }

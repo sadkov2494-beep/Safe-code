@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../models/level.dart';
 import '../models/player_progress.dart';
+import '../models/puzzle_archetype.dart';
 import '../services/level_service.dart';
 import '../services/level_visual_theme_service.dart';
 import '../services/progress_service.dart';
+import '../widgets/difficulty_badge.dart';
 import 'game_screen.dart';
 
 class LevelSelectScreen extends StatefulWidget {
@@ -80,6 +82,7 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
             completed: _progress.completedCount,
             total: levels.length,
             stars: _progress.totalStars,
+            noHintCompletions: _progress.noHintCompletions,
           ),
           const SizedBox(height: 16),
           for (final chapter in groups) ...[
@@ -105,6 +108,7 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
                     _progress,
                   );
                   final stars = _progress.bestStarsFor(level.id);
+                  final noHints = _progress.completedWithoutHints(level.id);
                   final visualTheme = _visualThemeService.themeForLevel(
                     level.id,
                   );
@@ -112,6 +116,7 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
                     level: level,
                     isUnlocked: unlocked,
                     stars: stars,
+                    noHints: noHints,
                     accent: visualTheme.accent,
                     safeStyleName: visualTheme.name,
                     pattern: visualTheme.pattern.name,
@@ -162,11 +167,13 @@ class _ArchiveHeader extends StatelessWidget {
     required this.completed,
     required this.total,
     required this.stars,
+    required this.noHintCompletions,
   });
 
   final int completed;
   final int total;
   final int stars;
+  final int noHintCompletions;
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +218,7 @@ class _ArchiveHeader extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '$completed/$total дел закрыто • $stars звезд',
+            '$completed/$total дел закрыто • $stars звезд • $noHintCompletions без подсказок',
             style: TextStyle(
               color: colorScheme.onPrimary.withValues(alpha: 0.82),
             ),
@@ -286,6 +293,7 @@ class _CaseFileTile extends StatelessWidget {
     required this.level,
     required this.isUnlocked,
     required this.stars,
+    required this.noHints,
     required this.accent,
     required this.safeStyleName,
     required this.pattern,
@@ -295,6 +303,7 @@ class _CaseFileTile extends StatelessWidget {
   final Level level;
   final bool isUnlocked;
   final int stars;
+  final bool noHints;
   final Color accent;
   final String safeStyleName;
   final String pattern;
@@ -303,8 +312,15 @@ class _CaseFileTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final bossAccent = level.isBoss ? const Color(0xFFFF6B6B) : accent;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
+      shape: level.isBoss
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+              side: BorderSide(color: bossAccent.withValues(alpha: 0.55), width: 1.5),
+            )
+          : null,
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
         onTap: onTap,
@@ -318,17 +334,19 @@ class _CaseFileTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
                   color: isUnlocked
-                      ? accent.withValues(alpha: 0.16)
+                      ? bossAccent.withValues(alpha: 0.16)
                       : colorScheme.surfaceContainerHighest,
                   border: Border.all(
                     color: isUnlocked
-                        ? accent.withValues(alpha: 0.32)
+                        ? bossAccent.withValues(alpha: 0.32)
                         : colorScheme.outlineVariant,
                   ),
                 ),
                 child: Icon(
-                  isUnlocked ? Icons.lock_open : Icons.lock_outline,
-                  color: isUnlocked ? accent : colorScheme.outline,
+                  level.isBoss
+                      ? Icons.workspace_premium
+                      : (isUnlocked ? Icons.lock_open : Icons.lock_outline),
+                  color: isUnlocked ? bossAccent : colorScheme.outline,
                 ),
               ),
               const SizedBox(width: 14),
@@ -336,12 +354,36 @@ class _CaseFileTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Дело ${level.id.toString().padLeft(2, '0')}',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: accent,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'Дело ${level.id.toString().padLeft(2, '0')}',
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: bossAccent,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        if (level.isBoss) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(999),
+                              color: bossAccent.withValues(alpha: 0.14),
+                            ),
+                            child: Text(
+                              'БОСС',
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: bossAccent,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -354,6 +396,23 @@ class _CaseFileTile extends StatelessWidget {
                     Text(
                       '$safeStyleName • $pattern • код ${level.codeLength} цифр',
                       style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        PuzzleTypeChip(
+                          label: level.archetype.label,
+                          accent: bossAccent,
+                        ),
+                        DifficultyBadge(
+                          rating: difficultyRatingFor(level),
+                          maxRating: 100,
+                          compact: true,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -372,6 +431,14 @@ class _CaseFileTile extends StatelessWidget {
                         );
                       }),
                     ),
+                    if (noHints) ...[
+                      const SizedBox(height: 4),
+                      Icon(
+                        Icons.verified_outlined,
+                        color: Colors.greenAccent.shade400,
+                        size: 18,
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Icon(Icons.chevron_right, color: colorScheme.outline),
                   ],

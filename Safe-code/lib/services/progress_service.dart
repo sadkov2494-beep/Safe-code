@@ -52,19 +52,29 @@ class ProgressService {
   Future<void> saveLevelResult({
     required int levelId,
     required int stars,
+    int hintsUsed = 0,
   }) async {
     final preferences = await SharedPreferences.getInstance();
     final progress = await loadProgress();
     final current = progress.levels[levelId];
-    if (current != null && current.bestStars >= stars) {
+    final noHints = hintsUsed == 0;
+    final nextWithoutHints =
+        (current?.completedWithoutHints ?? false) || noHints;
+
+    if (current != null &&
+        current.bestStars >= stars &&
+        (!noHints || current.completedWithoutHints)) {
       return;
     }
 
     final updated = Map<int, LevelProgress>.from(progress.levels)
       ..[levelId] = LevelProgress(
         levelId: levelId,
-        bestStars: stars,
+        bestStars: current == null
+            ? stars
+            : (stars > current.bestStars ? stars : current.bestStars),
         completedAt: DateTime.now(),
+        completedWithoutHints: nextWithoutHints,
       );
 
     await _saveLevels(updated);

@@ -15,6 +15,7 @@ class VictoryScreen extends StatelessWidget {
     required this.levelService,
     required this.progressService,
     this.wasSkipped = false,
+    this.completedWithoutHints = false,
   });
 
   final Level level;
@@ -23,6 +24,7 @@ class VictoryScreen extends StatelessWidget {
   final LevelService levelService;
   final ProgressService progressService;
   final bool wasSkipped;
+  final bool completedWithoutHints;
 
   static const _adService = AdService();
 
@@ -62,6 +64,23 @@ class VictoryScreen extends StatelessWidget {
                 );
               }),
             ),
+            if (completedWithoutHints && !wasSkipped) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.verified_outlined, color: Colors.greenAccent.shade400),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Пройдено без подсказок',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Colors.greenAccent.shade400,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
             Card(
               child: Padding(

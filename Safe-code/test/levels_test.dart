@@ -39,7 +39,7 @@ void main() {
       final failures = <String>[];
 
       for (final level in allLevels) {
-        for (final clue in level.logicalClues.where(
+        for (final clue in level.reliableLogicalClues.where(
           (clue) => clue.type == ClueType.mastermind,
         )) {
           final expectation = _parseMastermindExpectation(clue.description);
@@ -64,7 +64,7 @@ void main() {
       final failures = <String>[];
 
       for (final level in allLevels) {
-        for (final clue in level.logicalClues.where(
+        for (final clue in level.reliableLogicalClues.where(
           (clue) => clue.type == ClueType.logic,
         )) {
           final error = _validateLogicRestriction(
@@ -150,12 +150,58 @@ void main() {
       expect(first.correctCode, second.correctCode);
       expect(first.codeLength, 4);
       expect(first.id, greaterThanOrEqualTo(LevelService.dailySafeIdBase));
+      expect(first.maxAttempts, 5);
+      expect(
+        first.logicalClues.where((clue) => clue.type == ClueType.mastermind),
+        hasLength(2),
+      );
+      expect(
+        first.logicalClues.any(
+          (clue) =>
+              clue.description.contains('все четыре цифры верны и стоят'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('difficulty rating grows inside each chapter', () {
+      for (final start in [1, 11, 21]) {
+        final chapter = allLevels.where((level) {
+          final end = start + 9;
+          return level.id >= start && level.id <= end;
+        }).toList();
+        for (var index = 1; index < chapter.length; index++) {
+          expect(
+            chapter[index].difficultyRating,
+            greaterThanOrEqualTo(chapter[index - 1].difficultyRating),
+            reason:
+                'Level ${chapter[index].id} should not be easier than ${chapter[index - 1].id}.',
+          );
+        }
+      }
+    });
+
+    test('boss levels are marked at chapter ends', () {
+      expect(allLevels.firstWhere((level) => level.id == 10).isBoss, isTrue);
+      expect(allLevels.firstWhere((level) => level.id == 20).isBoss, isTrue);
+      expect(allLevels.firstWhere((level) => level.id == 30).isBoss, isTrue);
+    });
+
+    test('late chapter levels include unreliable journal entries', () {
+      for (final levelId in [25, 26, 27, 28, 29]) {
+        final level = allLevels.firstWhere((item) => item.id == levelId);
+        expect(
+          level.logicalClues.any((clue) => !clue.isReliable),
+          isTrue,
+          reason: 'Level $levelId should include a false journal clue.',
+        );
+      }
     });
   });
 }
 
 List<String> _validCandidatesFor(Level level) {
-  final logicalClues = level.logicalClues;
+  final logicalClues = level.reliableLogicalClues;
   final mastermindExpectations = logicalClues
       .where((clue) => clue.type == ClueType.mastermind)
       .map((clue) => _parseMastermindExpectation(clue.description))
@@ -394,17 +440,17 @@ _parseMastermindExpectation(String description) {
       exactMatches: guess.length,
     );
   }
-  if (description.contains('все три цифры входят') &&
+  if (description.contains('все пять цифр входят') &&
       description.contains('одна стоит')) {
-    return (guess: guess, totalMatches: 3, exactMatches: 1);
+    return (guess: guess, totalMatches: 5, exactMatches: 1);
   }
   if (description.contains('все четыре цифры входят') &&
       description.contains('одна стоит')) {
     return (guess: guess, totalMatches: 4, exactMatches: 1);
   }
-  if (description.contains('все пять цифр входят') &&
+  if (description.contains('все три цифры входят') &&
       description.contains('одна стоит')) {
-    return (guess: guess, totalMatches: 5, exactMatches: 1);
+    return (guess: guess, totalMatches: 3, exactMatches: 1);
   }
   if (description.contains('три цифры верны, но стоят не')) {
     return (guess: guess, totalMatches: 3, exactMatches: 0);

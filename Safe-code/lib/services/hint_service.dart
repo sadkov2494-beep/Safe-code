@@ -1,4 +1,5 @@
 import '../models/level.dart';
+import '../models/puzzle_archetype.dart';
 import '../models/safe_tool.dart';
 
 class ToolResult {
@@ -11,7 +12,12 @@ class ToolResult {
 class HintService {
   const HintService();
 
-  String softHintFor(Level level) => level.softHint;
+  String softHintFor(Level level) {
+    if (level.softHint.isNotEmpty) {
+      return level.softHint;
+    }
+    return level.archetype.hint;
+  }
 
   ToolResult useTool(Level level, SafeTool tool) {
     final code = level.correctCode;

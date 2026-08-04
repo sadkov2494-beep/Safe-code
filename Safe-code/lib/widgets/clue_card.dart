@@ -53,6 +53,7 @@ class _ClueCardState extends State<ClueCard>
       ClueType.logic => (Icons.rule_folder_outlined, 'Логика'),
       ClueType.visual => (Icons.visibility_outlined, 'Улика'),
     };
+    final unreliable = !widget.clue.isReliable;
 
     return AnimatedBuilder(
       animation: _pulseController,
@@ -67,16 +68,20 @@ class _ClueCardState extends State<ClueCard>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: widget.highlighted
+                color: unreliable
+                    ? colorScheme.error.withValues(alpha: 0.55)
+                    : widget.highlighted
                     ? Color.lerp(
                         colorScheme.primary,
                         Colors.white,
                         pulse * 0.35,
                       )!
                     : colorScheme.outlineVariant,
-                width: widget.highlighted ? 2 : 1,
+                width: widget.highlighted || unreliable ? 2 : 1,
               ),
-              color: widget.highlighted
+              color: unreliable
+                  ? colorScheme.errorContainer.withValues(alpha: 0.18)
+                  : widget.highlighted
                   ? colorScheme.primaryContainer.withValues(
                       alpha: 0.18 + pulse * 0.08,
                     )
@@ -108,12 +113,46 @@ class _ClueCardState extends State<ClueCard>
                   ListTile(
                     leading: Icon(
                       icon,
-                      color: widget.highlighted ? colorScheme.primary : null,
+                      color: unreliable
+                          ? colorScheme.error
+                          : (widget.highlighted ? colorScheme.primary : null),
                     ),
-                    title: Text(widget.clue.title),
+                    title: Row(
+                      children: [
+                        Expanded(child: Text(widget.clue.title)),
+                        if (unreliable)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(999),
+                              color: colorScheme.error.withValues(alpha: 0.14),
+                            ),
+                            child: Text(
+                              'Сомнительно',
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: colorScheme.error,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 4),
-                      child: Text('$label • ${widget.clue.description}'),
+                      child: Text(
+                        '$label • ${widget.clue.description}',
+                        style: unreliable
+                            ? TextStyle(
+                                decoration: TextDecoration.lineThrough,
+                                decorationColor: colorScheme.error.withValues(
+                                  alpha: 0.45,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
                   ),
                 ],

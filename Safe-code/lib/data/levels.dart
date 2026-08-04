@@ -1,13 +1,15 @@
 import '../models/clue.dart';
 import '../models/level.dart';
+import '../models/puzzle_archetype.dart';
 import '../models/safe_tool.dart';
 
-Clue _m(String title, String description, {bool important = false}) {
+Clue _m(String title, String description, {bool important = false, bool isReliable = true}) {
   return Clue(
     title: title,
     description: description,
     type: ClueType.mastermind,
     isImportant: important,
+    isReliable: isReliable,
   );
 }
 
@@ -31,7 +33,9 @@ Clue _v(String title, String description, {bool important = false}) {
 
 final List<Level> allLevels = [
   Level(
-    id: 1,
+    id: 1,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 12,
+
     title: 'Архивный ящик',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -59,7 +63,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 482: все три цифры верны и стоят на своих местах. 004: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 14. Итоговый код — 482.',
   ),
   Level(
-    id: 2,
+    id: 2,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 14,
+
     title: 'Пыльная панель',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -87,7 +93,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 157: все три цифры верны и стоят на своих местах. 001: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 13. Итоговый код — 157.',
   ),
   Level(
-    id: 3,
+    id: 3,    archetype: PuzzleArchetype.allWrongPositions,
+    difficultyRating: 16,
+
     title: 'Нулевой след',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -117,7 +125,9 @@ final List<Level> allLevels = [
         'Тип головоломки: только перестановки. 306: три цифры верны, но стоят не на своих местах. 031: две цифры верны, одна стоит на своем месте. Сумма цифр равна 9. Цифры не повторяются. Последняя цифра меньше первой. Итоговый код — 630.',
   ),
   Level(
-    id: 4,
+    id: 4,    archetype: PuzzleArchetype.allWrongPositions,
+    difficultyRating: 18,
+
     title: 'Латунный замок',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -148,7 +158,9 @@ final List<Level> allLevels = [
         'Тип головоломки: только перестановки. 942: три цифры верны, но стоят не на своих местах. 024: две цифры верны, одна стоит на своем месте. Первая цифра четная. Код не содержит нулей. соседние цифры не отличаются на 1. Средняя цифра — самая большая. Итоговый код — 294.',
   ),
   Level(
-    id: 5,
+    id: 5,    archetype: PuzzleArchetype.oneExactTwoWrong,
+    difficultyRating: 20,
+
     title: 'Тихий коридор',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -179,7 +191,9 @@ final List<Level> allLevels = [
         'Тип головоломки: одна точная позиция. 008: одна цифра верна и стоит на своем месте. 071: две цифры верны, но стоят не на своих местах. Цифры не повторяются. Последняя цифра больше первой. Первая цифра нечетная. Код не содержит нулей. Итоговый код — 718.',
   ),
   Level(
-    id: 6,
+    id: 6,    archetype: PuzzleArchetype.allWrongPositions,
+    difficultyRating: 22,
+
     title: 'Слабая лампа',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -210,7 +224,9 @@ final List<Level> allLevels = [
         'Тип головоломки: только перестановки. 653: три цифры верны, но стоят не на своих местах. 035: две цифры верны, одна стоит на своем месте. Первая цифра нечетная. Код не содержит нулей. Код содержит ровно две нечетные цифры. Средняя цифра — самая большая. Итоговый код — 365.',
   ),
   Level(
-    id: 7,
+    id: 7,    archetype: PuzzleArchetype.doubleWrong,
+    difficultyRating: 24,
+
     title: 'Северный сейф',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -241,7 +257,9 @@ final List<Level> allLevels = [
         'Тип головоломки: двойная перестановка. 014: две цифры верны, но стоят не на своих местах. 019: две цифры верны, но стоят не на своих местах. Цифры не повторяются. Последняя цифра меньше первой. Первая цифра нечетная. Код не содержит нулей. Итоговый код — 941.',
   ),
   Level(
-    id: 8,
+    id: 8,    archetype: PuzzleArchetype.allWrongPositions,
+    difficultyRating: 26,
+
     title: 'Мокрый бетон',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -271,7 +289,9 @@ final List<Level> allLevels = [
         'Тип головоломки: только перестановки. 205: три цифры верны, но стоят не на своих местах. 021: две цифры верны, одна стоит на своем месте. Сумма цифр равна 7. Цифры не повторяются. Последняя цифра меньше первой. Итоговый код — 520.',
   ),
   Level(
-    id: 9,
+    id: 9,    archetype: PuzzleArchetype.twoExact,
+    difficultyRating: 28,
+
     title: 'Синяя подсветка',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -298,7 +318,10 @@ final List<Level> allLevels = [
         'Тип головоломки: две точные позиции. 006: две цифры верны и стоят на своих местах. Сумма цифр равна 14. Цифры не повторяются. Последняя цифра меньше первой. Первая цифра четная. Итоговый код — 806.',
   ),
   Level(
-    id: 10,
+    id: 10,    archetype: PuzzleArchetype.allWrongPositions,
+    isBoss: true,
+    difficultyRating: 30,
+
     title: 'Красная папка',
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
@@ -329,7 +352,9 @@ final List<Level> allLevels = [
         'Тип головоломки: только перестановки. 732: три цифры верны, но стоят не на своих местах. 023: две цифры верны, одна стоит на своем месте. Сумма цифр равна 12. Цифры не повторяются. Последняя цифра больше первой. Первая цифра четная. Итоговый код — 273.',
   ),
   Level(
-    id: 11,
+    id: 11,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 33,
+
     title: 'Стеклянная дверь',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -357,7 +382,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 7392: все четыре цифры верны и стоят на своих местах. 0003: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 21. Итоговый код — 7392.',
   ),
   Level(
-    id: 12,
+    id: 12,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 36,
+
     title: 'Комната хранения',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -385,7 +412,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 4816: все четыре цифры верны и стоят на своих местах. 0001: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 19. Итоговый код — 4816.',
   ),
   Level(
-    id: 13,
+    id: 13,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 39,
+
     title: 'Черная бирка',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -413,7 +442,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 2057: все четыре цифры верны и стоят на своих местах. 0100: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 14. Итоговый код — 2057.',
   ),
   Level(
-    id: 14,
+    id: 14,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 42,
+
     title: 'Лифт без звука',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -441,7 +472,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 9631: все четыре цифры верны и стоят на своих местах. 0003: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 19. Итоговый код — 9631.',
   ),
   Level(
-    id: 15,
+    id: 15,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 45,
+
     title: 'Файл "Север"',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -469,7 +502,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 1478: все четыре цифры верны и стоят на своих местах. 0001: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 20. Итоговый код — 1478.',
   ),
   Level(
-    id: 16,
+    id: 16,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 48,
+
     title: 'Пульт охраны',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -497,7 +532,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 6204: все четыре цифры верны и стоят на своих местах. 0010: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 12. Итоговый код — 6204.',
   ),
   Level(
-    id: 17,
+    id: 17,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 51,
+
     title: 'Запертый стеллаж',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -525,7 +562,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 5829: все четыре цифры верны и стоят на своих местах. 0002: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 24. Итоговый код — 5829.',
   ),
   Level(
-    id: 18,
+    id: 18,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 54,
+
     title: 'Серый планшет',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -553,7 +592,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 3140: все четыре цифры верны и стоят на своих местах. 0002: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 8. Итоговый код — 3140.',
   ),
   Level(
-    id: 19,
+    id: 19,    archetype: PuzzleArchetype.allWrongPositions,
+    difficultyRating: 57,
+
     title: 'Пятый контейнер',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -583,7 +624,10 @@ final List<Level> allLevels = [
         'Тип головоломки: только перестановки. 7826: четыре цифры верны, но стоят не на своих местах. 0067: две цифры верны, одна стоит на своем месте. Сумма цифр равна 23. Цифры не повторяются. Последняя цифра меньше первой. Итоговый код — 8762.',
   ),
   Level(
-    id: 20,
+    id: 20,    archetype: PuzzleArchetype.fullMatch,
+    isBoss: true,
+    difficultyRating: 60,
+
     title: 'Сейф с меткой',
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
@@ -611,7 +655,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 4591: все четыре цифры верны и стоят на своих местах. 0004: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 19. Итоговый код — 4591.',
   ),
   Level(
-    id: 21,
+    id: 21,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 64,
+
     title: 'Двойной протокол',
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
@@ -639,7 +685,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 72836: все пять цифры верны и стоят на своих местах. 00002: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 26. Итоговый код — 72836.',
   ),
   Level(
-    id: 22,
+    id: 22,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 68,
+
     title: 'Зал с отражением',
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
@@ -667,7 +715,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 93047: все пять цифры верны и стоят на своих местах. 00100: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 23. Итоговый код — 93047.',
   ),
   Level(
-    id: 23,
+    id: 23,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 72,
+
     title: 'Короткий импульс',
     difficulty: LevelDifficulty.hard,
     codeLength: 4,
@@ -695,7 +745,9 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 1649: все четыре цифры верны и стоят на своих местах. 0001: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 20. Итоговый код — 1649.',
   ),
   Level(
-    id: 24,
+    id: 24,    archetype: PuzzleArchetype.nearComplete,
+    difficultyRating: 76,
+
     title: 'Пять контактов',
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
@@ -726,13 +778,20 @@ final List<Level> allLevels = [
         'Тип головоломки: почти готовый код. 05204: четыре цифры верны и стоят на своих местах. 00010: одна цифра верна, но стоит не на своем месте. Последняя цифра меньше первой. Первая цифра четная. в коде один ноль. соседние цифры не отличаются на 1. Итоговый код — 85204.',
   ),
   Level(
-    id: 25,
+    id: 25,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 80,
+
     title: 'Узел питания',
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
     correctCode: '40738',
     maxAttempts: 6,
     logicalClues: [
+      _m(
+        'Журнал 15842',
+        '15842: две цифры верны, но стоят не на своих местах.',
+        isReliable: false
+      ),
       _m(
         'Журнал 40738',
         '40738: все пять цифры верны и стоят на своих местах.',
@@ -754,13 +813,20 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 40738: все пять цифры верны и стоят на своих местах. 01000: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 22. Итоговый код — 40738.',
   ),
   Level(
-    id: 26,
+    id: 26,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 84,
+
     title: 'Складская метка',
     difficulty: LevelDifficulty.hard,
     codeLength: 4,
     correctCode: '2916',
     maxAttempts: 6,
     logicalClues: [
+      _m(
+        'Журнал 6192',
+        '6192: две цифры верны, но стоят не на своих местах.',
+        isReliable: false
+      ),
       _m(
         'Журнал 2916',
         '2916: все четыре цифры верны и стоят на своих местах.',
@@ -782,13 +848,20 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 2916: все четыре цифры верны и стоят на своих местах. 0001: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 18. Итоговый код — 2916.',
   ),
   Level(
-    id: 27,
+    id: 27,    archetype: PuzzleArchetype.nearComplete,
+    difficultyRating: 88,
+
     title: 'Глухой механизм',
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
     correctCode: '68025',
     maxAttempts: 6,
     logicalClues: [
+      _m(
+        'Журнал 28056',
+        '28056: три цифры верны, но стоят не на своих местах.',
+        isReliable: false
+      ),
       _m(
         'Журнал 08025',
         '08025: четыре цифры верны и стоят на своих местах.',
@@ -813,13 +886,20 @@ final List<Level> allLevels = [
         'Тип головоломки: почти готовый код. 08025: четыре цифры верны и стоят на своих местах. 00100: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 21. Цифры не повторяются. Последняя цифра меньше первой. Первая цифра четная. Итоговый код — 68025.',
   ),
   Level(
-    id: 28,
+    id: 28,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 92,
+
     title: 'Темный дисплей',
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
     correctCode: '73519',
     maxAttempts: 6,
     logicalClues: [
+      _m(
+        'Журнал 19375',
+        '19375: две цифры верны, но стоят не на своих местах.',
+        isReliable: false
+      ),
       _m(
         'Журнал 73519',
         '73519: все пять цифры верны и стоят на своих местах.',
@@ -841,13 +921,20 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 73519: все пять цифры верны и стоят на своих местах. 00001: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 25. Итоговый код — 73519.',
   ),
   Level(
-    id: 29,
+    id: 29,    archetype: PuzzleArchetype.fullMatch,
+    difficultyRating: 96,
+
     title: 'Медная рамка',
     difficulty: LevelDifficulty.hard,
     codeLength: 4,
     correctCode: '9240',
     maxAttempts: 5,
     logicalClues: [
+      _m(
+        'Журнал 4029',
+        '4029: две цифры верны, но стоят не на своих местах.',
+        isReliable: false
+      ),
       _m(
         'Журнал 9240',
         '9240: все четыре цифры верны и стоят на своих местах.',
@@ -869,7 +956,10 @@ final List<Level> allLevels = [
         'Тип головоломки: точное совпадение в журнале. 9240: все четыре цифры верны и стоят на своих местах. 0001: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 15. Итоговый код — 9240.',
   ),
   Level(
-    id: 30,
+    id: 30,    archetype: PuzzleArchetype.fullMatch,
+    isBoss: true,
+    difficultyRating: 100,
+
     title: 'Последняя ячейка',
     difficulty: LevelDifficulty.hard,
     codeLength: 5,

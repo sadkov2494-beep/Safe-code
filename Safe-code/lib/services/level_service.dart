@@ -2,12 +2,15 @@ import '../data/levels.dart';
 import '../models/clue.dart';
 import '../models/level.dart';
 import '../models/player_progress.dart';
+import '../models/puzzle_archetype.dart';
 import '../models/safe_tool.dart';
+import 'mastermind_service.dart';
 
 class LevelService {
   const LevelService();
 
   static const dailySafeIdBase = 80000000;
+  static const _mastermind = MastermindService();
 
   List<Level> get levels => allLevels;
 
@@ -29,6 +32,16 @@ class LevelService {
     final sum = code
         .split('')
         .fold<int>(0, (sum, digit) => sum + int.parse(digit));
+    final journalA = _dailyJournalGuess(code, today, 1);
+    final journalB = _dailyJournalGuess(code, today, 2);
+    final descriptionA = _journalDescription(
+      journalA,
+      _mastermind.score(code: code, guess: journalA),
+    );
+    final descriptionB = _journalDescription(
+      journalB,
+      _mastermind.score(code: code, guess: journalB),
+    );
 
     return Level(
       id: dailySafeIdBase + today.year * 10000 + today.month * 100 + today.day,
@@ -36,13 +49,20 @@ class LevelService {
       difficulty: LevelDifficulty.medium,
       codeLength: code.length,
       correctCode: code,
-      maxAttempts: 6,
+      maxAttempts: 5,
+      archetype: PuzzleArchetype.allWrongPositions,
+      difficultyRating: 55,
       logicalClues: [
         Clue(
-          title: 'Дневной журнал',
-          description: '$code: все четыре цифры верны и стоят на своих местах.',
+          title: 'Журнал $journalA',
+          description: descriptionA,
           type: ClueType.mastermind,
           isImportant: true,
+        ),
+        Clue(
+          title: 'Журнал $journalB',
+          description: descriptionB,
+          type: ClueType.mastermind,
         ),
         Clue(
           title: 'Контрольная сумма',
@@ -60,14 +80,13 @@ class LevelService {
         Clue(
           title: 'Свежий след',
           description:
-              'Самый яркий отпечаток сегодня совпадает с первой цифрой $code.',
+              'На панели видны следы нажатий, но без точного порядка цифр.',
           type: ClueType.visual,
-          isImportant: true,
         ),
         Clue(
           title: 'Последний щелчок',
           description:
-              'Слабый тепловой след остался на финальной цифре ${code[3]}.',
+              'Слабый тепловой след остался на одной из крайних клавиш.',
           type: ClueType.visual,
         ),
       ],
@@ -77,9 +96,9 @@ class LevelService {
         SafeTool.analyzer,
       ],
       softHint:
-          'Ежедневный журнал уже содержит проверенную дневную комбинацию; сверяйте ее с суммой и следами.',
+          'Цифры верны, но их нужно переставить — сверяйте журналы с суммой и следами.',
       solutionExplanation:
-          'Ежедневный сейф строится по дате $dateLabel. Журнал дает точный код $code, а сумма $sum и физические следы подтверждают первую и последнюю цифры.',
+          'Ежедневный сейф строится по дате $dateLabel. Журналы дают только перестановки, а сумма $sum сужает кандидатов до кода $code.',
     );
   }
 
@@ -112,6 +131,56 @@ class LevelService {
       }
     }
     return digits.join();
+  }
+
+  String _dailyJournalGuess(String code, DateTime date, int variant) {
+    final digits = code.split('');
+    var seed = date.year * 10000 + date.month * 100 + date.day + variant * 97;
+    for (var i = digits.length - 1; i > 0; i--) {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      final swapIndex = seed % (i + 1);
+      final temp = digits[i];
+      digits[i] = digits[swapIndex];
+      digits[swapIndex] = temp;
+    }
+    final guess = digits.join();
+    return guess == code ? _dailyJournalGuess(code, date, variant + 3) : guess;
+  }
+
+  String _journalDescription(String guess, MastermindResult result) {
+    final lengthWord = switch (guess.length) {
+      3 => 'три',
+      4 => 'четыре',
+      5 => 'пять',
+      _ => '${guess.length}',
+    };
+
+    if (result.exactMatches == guess.length) {
+      return '$guess: все $lengthWord цифры верны и стоят на своих местах.';
+    }
+    if (result.exactMatches == 0 &&
+        result.totalMatches == guess.length) {
+      return '$guess: $lengthWord цифры верны, но стоят не на своих местах.';
+    }
+    if (result.exactMatches == 1 && result.totalMatches == guess.length) {
+      return '$guess: все $lengthWord цифры входят в код, одна стоит на своем месте.';
+    }
+    if (result.exactMatches == 2 && result.totalMatches == 2) {
+      return '$guess: две цифры верны и стоят на своих местах.';
+    }
+    if (result.exactMatches == 1 && result.totalMatches == 2) {
+      return '$guess: две цифры верны, одна стоит на своем месте.';
+    }
+    if (result.exactMatches == 0 && result.totalMatches == 2) {
+      return '$guess: две цифры верны, но стоят не на своих местах.';
+    }
+    if (result.exactMatches == 0 && result.totalMatches == 1) {
+      return '$guess: одна цифра верна, но стоит не на своем месте.';
+    }
+    if (result.exactMatches == 1 && result.totalMatches == 1) {
+      return '$guess: одна цифра верна и стоит на своем месте.';
+    }
+    return '$guess: $lengthWord цифры верны, но стоят не на своих местах.';
   }
 
   DateTime _dateFromDailyId(int id) {

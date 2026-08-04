@@ -13,6 +13,7 @@ import '../services/hint_service.dart';
 import '../services/level_service.dart';
 import '../services/safe_scene_service.dart';
 import '../services/level_visual_theme_service.dart';
+import '../services/mastermind_service.dart';
 import '../services/progress_service.dart';
 import '../services/visual_clue_service.dart';
 import '../widgets/clue_card.dart';
@@ -41,6 +42,7 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   final _validator = const CodeValidator();
   final _hintService = const HintService();
+  final _mastermindService = const MastermindService();
   final _adService = const AdService();
   final _audioService = const AudioService();
   final _visualClueService = const VisualClueService();
@@ -122,6 +124,7 @@ class _GameScreenState extends State<GameScreen> {
       await widget.progressService.saveLevelResult(
         levelId: widget.level.id,
         stars: stars,
+        hintsUsed: _hintsUsed,
       );
       await Future<void>.delayed(const Duration(milliseconds: 650));
       if (!mounted) {
@@ -135,6 +138,7 @@ class _GameScreenState extends State<GameScreen> {
             nextLevel: widget.levelService.nextLevel(widget.level),
             levelService: widget.levelService,
             progressService: widget.progressService,
+            completedWithoutHints: _hintsUsed == 0,
           ),
         ),
       );
@@ -143,12 +147,29 @@ class _GameScreenState extends State<GameScreen> {
 
     await HapticFeedback.vibrate();
     await _audioService.playError();
+    final submittedGuess = _input;
+    final score = _mastermindService.score(
+      code: widget.level.correctCode,
+      guess: submittedGuess,
+    );
+    final updatedNotebook = _notebook.copyWith(
+      guesses: [
+        ..._notebook.guesses,
+        GuessRecord(
+          guess: submittedGuess,
+          totalMatches: score.totalMatches,
+          exactMatches: score.exactMatches,
+        ),
+      ],
+    );
     setState(() {
       _mistakes++;
       _attemptsLeft--;
       _input = '';
       _status = InputStatus.wrong;
+      _notebook = updatedNotebook;
     });
+    unawaited(widget.progressService.saveNotebook(widget.level.id, updatedNotebook));
     if (!mounted) {
       return;
     }
@@ -309,6 +330,16 @@ class _GameScreenState extends State<GameScreen> {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 14),
+                    if (draft.guesses.isNotEmpty) ...[
+                      Text(
+                        'Сетка попыток',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 8),
+                      _GuessGrid(guesses: draft.guesses),
+                      const SizedBox(height: 14),
+                    ],
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -545,6 +576,10 @@ class _GameScreenState extends State<GameScreen> {
             ),
             const SizedBox(height: 12),
             _NotebookSummary(notebook: _notebook, onOpen: _showNotebookSheet),
+            if (_notebook.guesses.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _GuessGrid(guesses: _notebook.guesses),
+            ],
             const SizedBox(height: 12),
             FilledButton.tonalIcon(
               onPressed: _showSoftHint,
@@ -635,6 +670,99 @@ class _TacticalStrip extends StatelessWidget {
   }
 }
 
+class _GuessGrid extends StatelessWidget {
+  const _GuessGrid({required this.guesses});
+
+  final List<GuessRecord> guesses;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Журнал попыток',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...guesses.map((record) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        record.guess,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                    _GuessPill(
+                      label: '${record.totalMatches}',
+                      tooltip: 'Верных цифр',
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    _GuessPill(
+                      label: '${record.exactMatches}',
+                      tooltip: 'Точных позиций',
+                      color: Colors.greenAccent,
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GuessPill extends StatelessWidget {
+  const _GuessPill({
+    required this.label,
+    required this.tooltip,
+    required this.color,
+  });
+
+  final String label;
+  final String tooltip;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        width: 34,
+        height: 30,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: color.withValues(alpha: 0.16),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _NotebookSummary extends StatelessWidget {
   const _NotebookSummary({required this.notebook, required this.onOpen});
 
@@ -657,9 +785,17 @@ class _NotebookSummary extends StatelessWidget {
         leading: const Icon(Icons.edit_note_outlined),
         title: const Text('Блокнот цифр'),
         subtitle: Text(
-          summary.isEmpty
+          [
+            if (notebook.guesses.isNotEmpty)
+              'попыток: ${notebook.guesses.length}',
+            if (summary.isNotEmpty) summary,
+          ].join(' • ').trim().isEmpty
               ? 'Отмечайте кандидатов, исключенные и подтвержденные цифры.'
-              : summary,
+              : [
+                  if (notebook.guesses.isNotEmpty)
+                    'попыток: ${notebook.guesses.length}',
+                  if (summary.isNotEmpty) summary,
+                ].join(' • '),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),

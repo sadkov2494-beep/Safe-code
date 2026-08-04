@@ -8,7 +8,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from export_levels_dart import CODES, FORCED_PATTERNS, HINTS, build_forced_level, explain
+from difficulty_curve import profile_for, target_max_attempts
+from export_levels_dart import CODES, HINTS, build_forced_level, explain
 from fast_generate_levels import LevelSpec
 
 ORIGINAL = Path("/workspace/Safe-code/lib/data/levels.dart").read_text(encoding="utf-8")
@@ -51,8 +52,8 @@ def dart_string(value: str) -> str:
     return value.replace("\\", "\\\\").replace("'", "\\'")
 
 
-def render_level(level: LevelSpec, meta: tuple) -> str:
-    title, difficulty, max_attempts, tools, v1t, v1d, v2t, v2d = meta
+def render_level(level: LevelSpec, meta: tuple, max_attempts: int) -> str:
+    title, difficulty, _, tools, v1t, v1d, v2t, v2d = meta
     tool_list = ", ".join(f"SafeTool.{tool}" for tool in tools)
     journals = []
     for index, journal in enumerate(level.journals):
@@ -84,15 +85,37 @@ def render_level(level: LevelSpec, meta: tuple) -> str:
 
 
 def main() -> None:
-    levels = [build_forced_level(i, code, FORCED_PATTERNS[i]) for i, code in enumerate(CODES, start=1)]
+    levels = [build_forced_level(i, code) for i, code in enumerate(CODES, start=1)]
     header = ORIGINAL.split("final List<Level> allLevels = [", 1)[0] + "final List<Level> allLevels = [\n"
-    body = ",\n".join(render_level(lv, LEVEL_META[i - 1]) for i, lv in enumerate(levels, start=1))
+    body = ",\n".join(
+        render_level(lv, LEVEL_META[i - 1], target_max_attempts(i))
+        for i, lv in enumerate(levels, start=1)
+    )
     Path("/workspace/Safe-code/lib/data/levels.dart").write_text(header + body + "\n];\n", encoding="utf-8")
     print("Wrote levels.dart")
-    from collections import Counter
-    c = Counter(lv.pattern for lv in levels)
-    for pattern, count in sorted(c.items(), key=lambda x: -x[1]):
-        print(f"  {pattern}: {count}")
+    profiles = [
+        profile_for(
+            lv.id,
+            lv.code,
+            lv.pattern,
+            len(lv.journals),
+            len(lv.restrictions),
+            target_max_attempts(lv.id),
+        )
+        for lv in levels
+    ]
+    for profile in profiles:
+        print(
+            f"  {profile.level_id:2} score={profile.score:3} "
+            f"{profile.pattern:22} attempts={profile.max_attempts} "
+            f"restrictions={profile.restriction_count}"
+        )
+    for prev, nxt in zip(profiles, profiles[1:]):
+        if nxt.score < prev.score:
+            raise SystemExit(
+                f"Difficulty regression at level {nxt.level_id}: {prev.score} -> {nxt.score}"
+            )
+    print("Difficulty curve is monotonic.")
 
 
 if __name__ == "__main__":

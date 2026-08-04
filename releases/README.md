@@ -11,13 +11,13 @@
 
 ## Версия
 
-- **1.2.2** (versionCode **6**)
+- **1.2.3** (versionCode **7**)
 - Package: `com.safecode.safe_code`
 - Yandex Ads: demo blocks (облачная сборка)
 
 ## SHA256
 
-- APK: `be6eb751b859c98a78f774c9c39e8f79525a0b398e185b969af2991ab7a26538`
+- APK: `01c4bfd5ecdf3430efffde3ecb7fe72243cf0ac0e27380163be379330b273e75`
 
 ## Скачать
 

@@ -3,17 +3,25 @@ class LevelProgress {
     required this.levelId,
     required this.bestStars,
     required this.completedAt,
+    this.completedWithoutHints = false,
   });
 
   final int levelId;
   final int bestStars;
   final DateTime completedAt;
+  final bool completedWithoutHints;
 
-  LevelProgress copyWith({int? bestStars, DateTime? completedAt}) {
+  LevelProgress copyWith({
+    int? bestStars,
+    DateTime? completedAt,
+    bool? completedWithoutHints,
+  }) {
     return LevelProgress(
       levelId: levelId,
       bestStars: bestStars ?? this.bestStars,
       completedAt: completedAt ?? this.completedAt,
+      completedWithoutHints:
+          completedWithoutHints ?? this.completedWithoutHints,
     );
   }
 
@@ -22,6 +30,7 @@ class LevelProgress {
       'levelId': levelId,
       'bestStars': bestStars,
       'completedAt': completedAt.toIso8601String(),
+      'completedWithoutHints': completedWithoutHints,
     };
   }
 
@@ -30,6 +39,7 @@ class LevelProgress {
       levelId: json['levelId']! as int,
       bestStars: json['bestStars']! as int,
       completedAt: DateTime.parse(json['completedAt']! as String),
+      completedWithoutHints: json['completedWithoutHints'] as bool? ?? false,
     );
   }
 }
@@ -61,10 +71,22 @@ class PlayerProgress {
 
   int bestStarsFor(int levelId) => levels[levelId]?.bestStars ?? 0;
 
+  bool completedWithoutHints(int levelId) =>
+      levels[levelId]?.completedWithoutHints ?? false;
+
   bool isCompleted(int levelId) => levels.containsKey(levelId);
 
   int get totalStars {
     return levels.values.fold<int>(0, (sum, level) => sum + level.bestStars);
+  }
+
+  int get noHintCompletions {
+    return levels.values
+        .where(
+          (level) =>
+              level.levelId < dailySafeIdBase && level.completedWithoutHints,
+        )
+        .length;
   }
 
   int get openedDailySafes {
