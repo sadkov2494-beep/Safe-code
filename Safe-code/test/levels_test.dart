@@ -122,6 +122,24 @@ void main() {
       );
     });
 
+    test('attempt budget tightens through each chapter', () {
+      for (final level in allLevels) {
+        expect(level.maxAttempts, _expectedAttempts(level.id));
+      }
+    });
+
+    test('code length grows by chapter', () {
+      for (final level in allLevels) {
+        if (level.id <= 10) {
+          expect(level.codeLength, 3);
+        } else if (level.id <= 20) {
+          expect(level.codeLength, 4);
+        } else {
+          expect(level.codeLength, greaterThanOrEqualTo(4));
+        }
+      }
+    });
+
     test('daily safe is deterministic for the same date', () {
       const service = LevelService();
       final date = DateTime(2026, 5, 18);
@@ -344,6 +362,13 @@ String? _validateLogicRestriction(String code, String description) {
   }
 
   return null;
+}
+
+int _expectedAttempts(int levelId) {
+  final base = levelId <= 10 ? 5 : (levelId <= 20 ? 6 : 7);
+  final chapterIndex = (levelId - 1) % 10;
+  final penalty = chapterIndex ~/ 4;
+  return (base - penalty).clamp(4, base);
 }
 
 Iterable<(int, int)> _adjacentPairs(List<int> digits) sync* {

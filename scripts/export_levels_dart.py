@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from difficulty_curve import profile_for, target_max_attempts, target_pattern, target_restriction_count
 from fast_generate_levels import (
     LevelSpec,
     build_patterns,
@@ -19,38 +20,17 @@ from fast_generate_levels import (
     score_mastermind,
 )
 
-FORCED_PATTERNS: dict[int, str] = {
-    1: "full_match",
-    2: "triple_elimination",
-    3: "all_wrong_positions",
-    4: "all_present_one_exact",
-    5: "one_exact_two_wrong",
-    6: "all_wrong_positions",
-    7: "double_wrong",
-    8: "mixed_cross",
-    9: "two_exact",
-    10: "all_wrong_positions",
-    11: "near_complete",
-    12: "all_wrong_positions",
-    13: "one_exact_two_wrong",
-    14: "all_present_one_exact",
-    15: "mixed_cross",
-    16: "near_complete",
-    17: "triple_elimination",
-    18: "all_wrong_positions",
-    19: "all_wrong_positions",
-    20: "double_wrong",
-    21: "near_complete",
-    22: "mixed_cross",
-    23: "triple_elimination",
-    24: "near_complete",
-    25: "one_exact_two_wrong",
-    26: "two_exact",
-    27: "near_complete",
-    28: "all_present_one_exact",
-    29: "all_present_one_exact",
-    30: "near_complete",
-}
+PATTERN_LADDER_ORDER = [
+    "full_match",
+    "all_present_one_exact",
+    "near_complete",
+    "two_exact",
+    "one_exact_two_wrong",
+    "mixed_cross",
+    "double_wrong",
+    "all_wrong_positions",
+    "triple_elimination",
+]
 
 PATTERN_TITLES = {
     "full_match": "точное совпадение в журнале",
@@ -67,7 +47,7 @@ PATTERN_TITLES = {
 CODES = [
     "482", "157", "630", "294", "718", "365", "941", "520", "806", "273",
     "7392", "4816", "2057", "9631", "1478", "6204", "5829", "3140", "8762", "4591",
-    "72836", "93047", "1649", "85204", "40738", "2916", "68025", "73519", "9240", "58147",
+    "2916", "1649", "9240", "72836", "85204", "93047", "40738", "68025", "73519", "58147",
 ]
 
 ORIGINAL = Path("/workspace/Safe-code/lib/data/levels.dart").read_text(encoding="utf-8")
@@ -88,22 +68,37 @@ def extract_block(level_id: int) -> str:
     raise RuntimeError(f"block {level_id}")
 
 
-def build_forced_level(level_id: int, code: str, pattern: str) -> LevelSpec:
+def build_forced_level(level_id: int, code: str) -> LevelSpec:
     options = dict(build_patterns(code))
-    pattern_order = [pattern] + [p for p in FORCED_PATTERNS.values() if p != pattern]
-    for candidate_pattern in pattern_order:
-        if candidate_pattern not in options:
-            continue
-        journals = options[candidate_pattern]
-        for start in range(30):
-            for count in range(1, 5):
-                restrictions = pick_restrictions(code, count, start)
-                try:
-                    solutions = valid_candidates(code, journals, restrictions)
-                except ValueError:
-                    continue
-                if solutions == [code]:
-                    return LevelSpec(level_id, code, journals, restrictions, candidate_pattern)
+    desired_restrictions = target_restriction_count(level_id)
+    if level_id <= 3:
+        pattern_orders = [PATTERN_LADDER_ORDER[:]]
+    else:
+        min_index = min(max(0, level_id - 2), len(PATTERN_LADDER_ORDER) - 1)
+        pattern_orders = [
+            list(reversed(PATTERN_LADDER_ORDER[floor:]))
+            for floor in range(min_index, -1, -1)
+        ]
+
+    for pattern_order in pattern_orders:
+        for candidate_pattern in pattern_order:
+            if candidate_pattern not in options:
+                continue
+            journals = options[candidate_pattern]
+            restriction_range = (
+                range(desired_restrictions, 5)
+                if candidate_pattern != "full_match"
+                else range(1, 5)
+            )
+            for start in range(30):
+                for count in restriction_range:
+                    restrictions = pick_restrictions(code, count, start)
+                    try:
+                        solutions = valid_candidates(code, journals, restrictions)
+                    except ValueError:
+                        continue
+                    if solutions == [code]:
+                        return LevelSpec(level_id, code, journals, restrictions, candidate_pattern)
     raise RuntimeError(f"Level {level_id}: no unique solution")
 
 

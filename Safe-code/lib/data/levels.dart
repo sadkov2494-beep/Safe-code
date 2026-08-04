@@ -125,9 +125,13 @@ final List<Level> allLevels = [
     maxAttempts: 5,
     logicalClues: [
       _m(
-        'Журнал 249',
-        '249: все три цифры входят в код, одна стоит на своем месте.',
+        'Журнал 942',
+        '942: три цифры верны, но стоят не на своих местах.',
         important: true
+      ),
+      _m(
+        'Журнал 024',
+        '024: две цифры верны, одна стоит на своем месте.'
       ),
       _l('Ограничение', 'Первая цифра четная.'),
       _l('Ограничение', 'Код не содержит нулей.'),
@@ -139,9 +143,9 @@ final List<Level> allLevels = [
       _v('Записка', 'На листке рядом написано: "края уже почти на месте".'),
     ],
     availableTools: [SafeTool.thermalViewer, SafeTool.stethoscope],
-    softHint: 'Все цифры уже известны — осталось найти единственную точную позицию.',
+    softHint: 'Цифры верны, но их нужно переставить — ищи фиксированную позицию во второй записи.',
     solutionExplanation:
-        'Тип головоломки: все цифры на месте почти. 249: все три цифры входят в код, одна стоит на своем месте. Первая цифра четная. Код не содержит нулей. соседние цифры не отличаются на 1. Средняя цифра — самая большая. Итоговый код — 294.',
+        'Тип головоломки: только перестановки. 942: три цифры верны, но стоят не на своих местах. 024: две цифры верны, одна стоит на своем месте. Первая цифра четная. Код не содержит нулей. соседние цифры не отличаются на 1. Средняя цифра — самая большая. Итоговый код — 294.',
   ),
   Level(
     id: 5,
@@ -149,7 +153,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
     correctCode: '718',
-    maxAttempts: 5,
+    maxAttempts: 4,
     logicalClues: [
       _m(
         'Журнал 008',
@@ -180,7 +184,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
     correctCode: '365',
-    maxAttempts: 5,
+    maxAttempts: 4,
     logicalClues: [
       _m(
         'Журнал 653',
@@ -211,7 +215,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
     correctCode: '941',
-    maxAttempts: 5,
+    maxAttempts: 4,
     logicalClues: [
       _m(
         'Журнал 014',
@@ -242,27 +246,29 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
     correctCode: '520',
-    maxAttempts: 5,
+    maxAttempts: 4,
     logicalClues: [
       _m(
-        'Журнал 520',
-        '520: все три цифры верны и стоят на своих местах.',
+        'Журнал 205',
+        '205: три цифры верны, но стоят не на своих местах.',
         important: true
       ),
       _m(
-        'Журнал 001',
-        '001: одна цифра верна, но стоит не на своем месте.'
+        'Журнал 021',
+        '021: две цифры верны, одна стоит на своем месте.'
       ),
       _l('Ограничение', 'Сумма цифр равна 7.'),
+      _l('Ограничение', 'Цифры не повторяются.'),
+      _l('Ограничение', 'Последняя цифра меньше первой.'),
     ],
     visualClues: [
       _v('Тепловизор охраны', 'В журнале тепла видна нулевая клавиша.'),
       _v('Пыль', 'На 5 и 2 нет свежей пыли после нажатия.'),
     ],
     availableTools: [SafeTool.thermalViewer, SafeTool.decryptor],
-    softHint: 'Одна запись уже полностью совпадает — проверь её ограничениями.',
+    softHint: 'Цифры верны, но их нужно переставить — ищи фиксированную позицию во второй записи.',
     solutionExplanation:
-        'Тип головоломки: точное совпадение в журнале. 520: все три цифры верны и стоят на своих местах. 001: одна цифра верна, но стоит не на своем месте. Сумма цифр равна 7. Итоговый код — 520.',
+        'Тип головоломки: только перестановки. 205: три цифры верны, но стоят не на своих местах. 021: две цифры верны, одна стоит на своем месте. Сумма цифр равна 7. Цифры не повторяются. Последняя цифра меньше первой. Итоговый код — 520.',
   ),
   Level(
     id: 9,
@@ -270,7 +276,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
     correctCode: '806',
-    maxAttempts: 5,
+    maxAttempts: 4,
     logicalClues: [
       _m(
         'Журнал 006',
@@ -297,7 +303,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.easy,
     codeLength: 3,
     correctCode: '273',
-    maxAttempts: 5,
+    maxAttempts: 4,
     logicalClues: [
       _m(
         'Журнал 732',
@@ -440,7 +446,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
     correctCode: '1478',
-    maxAttempts: 6,
+    maxAttempts: 5,
     logicalClues: [
       _m(
         'Журнал 1478',
@@ -468,7 +474,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
     correctCode: '6204',
-    maxAttempts: 6,
+    maxAttempts: 5,
     logicalClues: [
       _m(
         'Журнал 6204',
@@ -496,7 +502,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
     correctCode: '5829',
-    maxAttempts: 6,
+    maxAttempts: 5,
     logicalClues: [
       _m(
         'Журнал 5829',
@@ -524,7 +530,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
     correctCode: '3140',
-    maxAttempts: 6,
+    maxAttempts: 5,
     logicalClues: [
       _m(
         'Журнал 3140',
@@ -552,7 +558,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
     correctCode: '8762',
-    maxAttempts: 6,
+    maxAttempts: 4,
     logicalClues: [
       _m(
         'Журнал 7826',
@@ -582,7 +588,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.medium,
     codeLength: 4,
     correctCode: '4591',
-    maxAttempts: 6,
+    maxAttempts: 4,
     logicalClues: [
       _m(
         'Журнал 4591',
@@ -725,7 +731,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
     correctCode: '40738',
-    maxAttempts: 7,
+    maxAttempts: 6,
     logicalClues: [
       _m(
         'Журнал 40738',
@@ -753,7 +759,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.hard,
     codeLength: 4,
     correctCode: '2916',
-    maxAttempts: 7,
+    maxAttempts: 6,
     logicalClues: [
       _m(
         'Журнал 2916',
@@ -781,7 +787,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
     correctCode: '68025',
-    maxAttempts: 7,
+    maxAttempts: 6,
     logicalClues: [
       _m(
         'Журнал 08025',
@@ -812,7 +818,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
     correctCode: '73519',
-    maxAttempts: 7,
+    maxAttempts: 6,
     logicalClues: [
       _m(
         'Журнал 73519',
@@ -840,7 +846,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.hard,
     codeLength: 4,
     correctCode: '9240',
-    maxAttempts: 7,
+    maxAttempts: 5,
     logicalClues: [
       _m(
         'Журнал 9240',
@@ -868,7 +874,7 @@ final List<Level> allLevels = [
     difficulty: LevelDifficulty.hard,
     codeLength: 5,
     correctCode: '58147',
-    maxAttempts: 7,
+    maxAttempts: 5,
     logicalClues: [
       _m(
         'Журнал 58147',
