@@ -73,7 +73,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Версия приложения'),
               subtitle: Text(
                 '$versionLabel\n'
-                'Начиная с 1.2.4 обновления устанавливаются поверх старой версии без удаления.',
+                'Обновления из RuStore и с GitHub — разные каналы: нужен тот же источник, '
+                'с которого ставили игру. RuStore-версию обновляйте только через магазин.',
               ),
               trailing: FilledButton.tonal(
                 onPressed: _openUpdatePage,

@@ -1,57 +1,34 @@
 # Release builds — Safe Code / Код Сейфа
 
-Сборки для RuStore и прямой установки на Android.
-
-## Файлы
-
-| Файл | Размер | Назначение |
-|------|--------|------------|
-| `safe-code-release.apk` | ~60 MB | Установка вручную или загрузка в RuStore |
-| `safe-code-release.aab` | ~61 MB | App Bundle для RuStore (если требуется) |
-
 ## Версия
 
-- **1.2.4** (versionCode **8**)
+- **1.2.5** (versionCode **9**)
 - Package: `com.safecode.safe_code`
-- Yandex Ads: demo blocks (облачная сборка)
 
-## Подпись и обновления
+## Подпись: RuStore vs GitHub
 
-Начиная с **1.2.4+8** все APK из этого репозитория подписываются **одним CI-ключом**
-(`android/keystores/safe-code-ci-upload.jks`). Новые версии можно ставить **поверх старой**
-без удаления приложения.
+| Канал | Ключ |
+|-------|------|
+| **RuStore** | Ваш release keystore (`android/key.properties`) — **тот же**, что для первой версии |
+| **GitHub APK** | CI-keystore (`android/ci-key.properties`) |
 
-Если у вас установлена сборка **1.2.3 или ниже** с облачной debug-подписью — удалите её
-**один раз** и поставьте 1.2.4+. Дальше обновления будут накатываться автоматически.
-
+Обновления RuStore **нельзя** подписывать CI-ключом, если первая версия уже в магазине.
 Подробнее: `Safe-code/docs/ANDROID_SIGNING.md`
 
-## SHA256
+## Иконка
 
-- APK: `fb98ef236dd628c28e366822fe90fcf4b548e6a807455f427cf8d01ca425df96`
-- Cert SHA-256: `0af0b2555c5f821470c8f21f66fcd675b1e6bff05b7bfbb36d0df868bab5745c`
+В 1.2.5 исправлена иконка: исходник был 1536×1024 (не квадрат), из-за этого на Android она выглядела сплющенной.
+Теперь используется квадрат 1024×1024 + adaptive foreground.
 
-## Скачать
+## Скачать (GitHub, CI-подпись)
 
 - APK: https://github.com/sadkov2494-beep/Safe-code/raw/cursor/consistent-android-signing-b62e/releases/safe-code-release.apk
-
-## Установка APK вручную
-
-1. Скачайте APK на телефон.
-2. Разрешите установку из браузера или файлового менеджера.
-3. Откройте файл и установите (поверх старой версии 1.2.4+, если она уже есть).
+- SHA256: `ae7b8e65ff96b016412691d0dbeecac9949ef62f3e2a7ca25d2bb0f768c127aa`
 
 ## RuStore
 
-Пошаговая публикация: `Safe-code/docs/RUSTORE_PUBLISH.md`
-
-Для RuStore с **собственным** release keystore:
+Соберите локально с **вашим** keystore:
 
 ```bash
-bash scripts/generate-rustore-keystore.sh
 bash scripts/build-rustore-release.sh
 ```
-
-## Реклама
-
-Сборка **1.2.1+5** собрана с боевыми блоками Яндекс РСЯ (rewarded + interstitial).
