@@ -1,0 +1,203 @@
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/notebook_entry.dart';
+import '../models/player_progress.dart';
+
+class ProgressService {
+  const ProgressService();
+
+  static const _levelsKey = 'safe_code.level_progress';
+  static const _dailyBonusKey = 'safe_code.last_daily_bonus';
+  static const _dailySafeKey = 'safe_code.last_daily_safe';
+  static const _dailyStreakKey = 'safe_code.daily_streak';
+  static const _bestDailyStreakKey = 'safe_code.best_daily_streak';
+  static const _themeKey = 'safe_code.theme_mode';
+  static const _soundEnabledKey = 'safe_code.sound_enabled';
+  static const _musicEnabledKey = 'safe_code.music_enabled';
+  static const _onboardingKey = 'safe_code.onboarding_completed';
+  static const _notebookPrefix = 'safe_code.notebook.';
+
+  Future<PlayerProgress> loadProgress() async {
+    final preferences = await SharedPreferences.getInstance();
+    final rawLevels = preferences.getString(_levelsKey);
+    final rawDailyBonus = preferences.getString(_dailyBonusKey);
+    final rawDailySafe = preferences.getString(_dailySafeKey);
+    final levels = <int, LevelProgress>{};
+
+    if (rawLevels != null && rawLevels.isNotEmpty) {
+      final decoded = jsonDecode(rawLevels) as List<dynamic>;
+      for (final item in decoded) {
+        final progress = LevelProgress.fromJson(
+          Map<String, Object?>.from(item as Map<dynamic, dynamic>),
+        );
+        levels[progress.levelId] = progress;
+      }
+    }
+
+    return PlayerProgress(
+      levels: levels,
+      lastDailyBonusDate: rawDailyBonus == null
+          ? null
+          : DateTime.tryParse(rawDailyBonus),
+      lastDailySafeDate: rawDailySafe == null
+          ? null
+          : DateTime.tryParse(rawDailySafe),
+      dailyStreak: preferences.getInt(_dailyStreakKey) ?? 0,
+      bestDailyStreak: preferences.getInt(_bestDailyStreakKey) ?? 0,
+    );
+  }
+
+  Future<void> saveLevelResult({
+    required int levelId,
+    required int stars,
+    int hintsUsed = 0,
+  }) async {
+    final preferences = await SharedPreferences.getInstance();
+    final progress = await loadProgress();
+    final current = progress.levels[levelId];
+    final noHints = hintsUsed == 0;
+    final nextWithoutHints =
+        (current?.completedWithoutHints ?? false) || noHints;
+
+    if (current != null &&
+        current.bestStars >= stars &&
+        (!noHints || current.completedWithoutHints)) {
+      return;
+    }
+
+    final updated = Map<int, LevelProgress>.from(progress.levels)
+      ..[levelId] = LevelProgress(
+        levelId: levelId,
+        bestStars: current == null
+            ? stars
+            : (stars > current.bestStars ? stars : current.bestStars),
+        completedAt: DateTime.now(),
+        completedWithoutHints: nextWithoutHints,
+      );
+
+    await _saveLevels(updated);
+
+    if (levelId >= PlayerProgress.dailySafeIdBase) {
+      await _saveDailyStreak(preferences, progress.lastDailySafeDate);
+    }
+  }
+
+  Future<bool> claimDailyBonus() async {
+    final preferences = await SharedPreferences.getInstance();
+    final today = _dateOnly(DateTime.now());
+    final rawDailyBonus = preferences.getString(_dailyBonusKey);
+    final lastClaim = rawDailyBonus == null
+        ? null
+        : DateTime.tryParse(rawDailyBonus);
+
+    if (lastClaim != null && _dateOnly(lastClaim) == today) {
+      return false;
+    }
+
+    await preferences.setString(_dailyBonusKey, today.toIso8601String());
+    return true;
+  }
+
+  Future<String> loadThemeMode() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getString(_themeKey) ?? 'dark';
+  }
+
+  Future<void> saveThemeMode(String mode) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(_themeKey, mode);
+  }
+
+  Future<bool> loadSoundEnabled() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool(_soundEnabledKey) ?? true;
+  }
+
+  Future<void> saveSoundEnabled(bool enabled) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_soundEnabledKey, enabled);
+  }
+
+  Future<bool> loadMusicEnabled() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool(_musicEnabledKey) ?? true;
+  }
+
+  Future<void> saveMusicEnabled(bool enabled) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_musicEnabledKey, enabled);
+  }
+
+  Future<bool> loadOnboardingCompleted() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool(_onboardingKey) ?? false;
+  }
+
+  Future<void> saveOnboardingCompleted() async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_onboardingKey, true);
+  }
+
+  Future<NotebookEntry> loadNotebook(int levelId) async {
+    final preferences = await SharedPreferences.getInstance();
+    final rawNotebook = preferences.getString('$_notebookPrefix$levelId');
+    if (rawNotebook == null || rawNotebook.isEmpty) {
+      return NotebookEntry.empty();
+    }
+    return NotebookEntry.fromJson(
+      Map<String, Object?>.from(
+        jsonDecode(rawNotebook) as Map<dynamic, dynamic>,
+      ),
+    );
+  }
+
+  Future<void> saveNotebook(int levelId, NotebookEntry entry) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      '$_notebookPrefix$levelId',
+      jsonEncode(entry.toJson()),
+    );
+  }
+
+  Future<void> _saveLevels(Map<int, LevelProgress> levels) async {
+    final preferences = await SharedPreferences.getInstance();
+    final encoded = jsonEncode(
+      levels.values.map((level) => level.toJson()).toList(),
+    );
+    await preferences.setString(_levelsKey, encoded);
+  }
+
+  Future<void> _saveDailyStreak(
+    SharedPreferences preferences,
+    DateTime? previousDailySafe,
+  ) async {
+    final today = _dateOnly(DateTime.now());
+    final previous = previousDailySafe == null
+        ? null
+        : _dateOnly(previousDailySafe);
+
+    var nextStreak = preferences.getInt(_dailyStreakKey) ?? 0;
+    if (previous == null) {
+      nextStreak = 1;
+    } else if (previous == today) {
+      return;
+    } else if (previous == today.subtract(const Duration(days: 1))) {
+      nextStreak++;
+    } else {
+      nextStreak = 1;
+    }
+
+    final bestStreak = preferences.getInt(_bestDailyStreakKey) ?? 0;
+    await preferences.setString(_dailySafeKey, today.toIso8601String());
+    await preferences.setInt(_dailyStreakKey, nextStreak);
+    if (nextStreak > bestStreak) {
+      await preferences.setInt(_bestDailyStreakKey, nextStreak);
+    }
+  }
+
+  DateTime _dateOnly(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
+  }
+}
