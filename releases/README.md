@@ -11,19 +11,17 @@
 
 ## Версия
 
-- **1.2.1** (versionCode **5**)
+- **1.2.2** (versionCode **6**)
 - Package: `com.safecode.safe_code`
-- Yandex Ads: production blocks `R-M-19316679-*` (вшиты в сборку)
+- Yandex Ads: demo blocks (облачная сборка)
 
 ## SHA256
 
-- APK: `f8ee94f4335c118cdcbcffebd8e7e6efb58ae1d1e09d33cc6a0f1fac304de819`
-- AAB: `67e7b5457549de27e3de9c65a0b713088ca2bb942c6330be7efe692eee31d1ea`
+- APK: `be6eb751b859c98a78f774c9c39e8f79525a0b398e185b969af2991ab7a26538`
 
 ## Скачать
 
-- APK: https://github.com/sadkov2494-beep/Safe-code/raw/cursor/safe-code-flutter-mvp-3784/releases/safe-code-release.apk
-- AAB: https://github.com/sadkov2494-beep/Safe-code/raw/cursor/safe-code-flutter-mvp-3784/releases/safe-code-release.aab
+- APK: https://github.com/sadkov2494-beep/Safe-code/raw/cursor/diverse-level-logic-b62e/releases/safe-code-release.apk
 
 ## Установка APK вручную
 

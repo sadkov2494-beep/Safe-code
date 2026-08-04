@@ -317,6 +317,32 @@ String? _validateLogicRestriction(String code, String description) {
     }
   }
 
+  if (description.contains('Первая цифра больше последней')) {
+    if (fail(digits.first > digits.last)) {
+      return '"$description" failed for $code.';
+    }
+  }
+  if (description.contains('Первая цифра меньше средней')) {
+    if (fail(digits[0] < digits[1])) {
+      return '"$description" failed for $code.';
+    }
+  }
+  if (description.contains('Средняя цифра — самая большая')) {
+    if (fail(digits[1] == digits.reduce((a, b) => a > b ? a : b))) {
+      return '"$description" failed for $code.';
+    }
+  }
+  if (description.contains('Первая и последняя цифры четные')) {
+    if (fail(digits.first.isEven && digits.last.isEven)) {
+      return '"$description" failed for $code.';
+    }
+  }
+  if (description.contains('Код не содержит нулей')) {
+    if (fail(zeroCount == 0)) {
+      return '"$description" failed for $code.';
+    }
+  }
+
   return null;
 }
 
@@ -335,7 +361,8 @@ _parseMastermindExpectation(String description) {
   }
   if (description.contains('все три цифры верны') ||
       description.contains('все четыре цифры верны') ||
-      description.contains('все пять цифр верны')) {
+      description.contains('все пять цифр верны') ||
+      description.contains('все пять цифры верны')) {
     return (
       guess: guess,
       totalMatches: guess.length,
@@ -345,6 +372,23 @@ _parseMastermindExpectation(String description) {
   if (description.contains('все три цифры входят') &&
       description.contains('одна стоит')) {
     return (guess: guess, totalMatches: 3, exactMatches: 1);
+  }
+  if (description.contains('все четыре цифры входят') &&
+      description.contains('одна стоит')) {
+    return (guess: guess, totalMatches: 4, exactMatches: 1);
+  }
+  if (description.contains('все пять цифр входят') &&
+      description.contains('одна стоит')) {
+    return (guess: guess, totalMatches: 5, exactMatches: 1);
+  }
+  if (description.contains('три цифры верны, но стоят не')) {
+    return (guess: guess, totalMatches: 3, exactMatches: 0);
+  }
+  if (description.contains('четыре цифры верны, но стоят не')) {
+    return (guess: guess, totalMatches: 4, exactMatches: 0);
+  }
+  if (description.contains('пять цифр верны, но стоят не')) {
+    return (guess: guess, totalMatches: 5, exactMatches: 0);
   }
   if (description.contains('четыре цифры верны и стоят')) {
     return (guess: guess, totalMatches: 4, exactMatches: 4);
